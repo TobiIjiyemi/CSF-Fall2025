@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "fixpoint.h"
+#include <stdint.h>
 
 ////////////////////////////////////////////////////////////////////////
 // Helper functions
@@ -59,7 +60,21 @@ fixpoint_negate( fixpoint_t *val ) {
 
 result_t
 fixpoint_add( fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *right ) {
-  // TODO: implement
+  // TODO: implement  
+  uint32_t max = UINT32_MAX;
+
+  // When both numbers have the same sign + addressing negative sign at the end
+   if (left->negative && right->negative) {
+    if ((max - left->frac) > right->frac) {
+
+    } else {
+      
+    }
+   }
+
+  // When one number is positive and the other is negative
+
+
 }
 
 result_t
