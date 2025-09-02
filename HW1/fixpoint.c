@@ -65,9 +65,8 @@ fixpoint_add( fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *righ
 
   // When both numbers have the same sign + addressing negative sign at the end
    if (left->negative && right->negative) {
-    if ((max - left->frac) > right->frac) {
-
-    } else {
+    uint32_t sum = left->frac + right->frac; 
+    if (sum > max) {
       
     }
    }
