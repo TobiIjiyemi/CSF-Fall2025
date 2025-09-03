@@ -65,9 +65,11 @@ fixpoint_add( fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *righ
 
   // When both numbers have the same sign + addressing negative sign at the end
    if (left->negative && right->negative) {
-    uint32_t sum = left->frac + right->frac; 
-    if (sum > max) {
-      
+    uint32_t sum_frac = left->frac + right->frac; 
+    if (sum_frac < left->frac || sum_frac < right->frac) { // underflow occurred, the sum of the fractional part should be less than either of the addends
+ 
+    } else {
+      result->frac = sum_frac;
     }
    }
 
