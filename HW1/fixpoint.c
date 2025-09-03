@@ -62,24 +62,33 @@ result_t
 fixpoint_add( fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *right ) {
   // TODO: implement  
   uint32_t max = UINT32_MAX;
+  uint32_t sum_frac = left->frac + right->frac;
+  uint32_t sum_whole = left->whole + right->whole;
 
   // When both numbers have the same sign + addressing negative sign at the end
    if (left->negative && right->negative) {
-    uint32_t sum_frac = left->frac + right->frac; 
-    if (sum_frac < left->frac || sum_frac < right->frac) { // underflow occurred, the sum of the fractional part should be less than either of the addends
+    if (sum_frac < left->frac || sum_frac < right->frac) { // the sum of the fractional part should be less than either of the addends
       result->frac = sum_frac;
-      RESULT_UNDERFLOW;
-
+      // carry to the whole part
+      if (sum_whole == max) { // overflow occurred, the whole part is already at max value
+        result->whole = sum_whole;
+        result->negative = left->negative; // both numbers are negative, so the result should be negative
+        RESULT_OVERFLOW;
+      } else {
+        sum_whole += 1;
+      }
+      sum_whole += 1;
     } else {
       result->frac = sum_frac;
+      RESULT_OK;
     }
-    uint32_t sum_whole = left->whole + right->whole;
     if (sum_whole < left->whole || sum_whole < right->whole) { // overflow occurred, the sum of the whole part should be less than either of the addends
-
-   
+      result->whole = sum_whole;
+      RESULT_OVERFLOW;
     } else {
       result->whole = sum_whole;
       result->negative = true;
+      RESULT_OK;
    }
 
   // When one number is positive and the other is negative
