@@ -67,10 +67,19 @@ fixpoint_add( fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *righ
    if (left->negative && right->negative) {
     uint32_t sum_frac = left->frac + right->frac; 
     if (sum_frac < left->frac || sum_frac < right->frac) { // underflow occurred, the sum of the fractional part should be less than either of the addends
- 
+      result->frac = sum_frac;
+      RESULT_UNDERFLOW;
+
     } else {
       result->frac = sum_frac;
     }
+    uint32_t sum_whole = left->whole + right->whole;
+    if (sum_whole < left->whole || sum_whole < right->whole) { // overflow occurred, the sum of the whole part should be less than either of the addends
+
+   
+    } else {
+      result->whole = sum_whole;
+      result->negative = true;
    }
 
   // When one number is positive and the other is negative
