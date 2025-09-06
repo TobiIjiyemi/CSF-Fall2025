@@ -79,10 +79,12 @@ fixpoint_add( fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *righ
   // When the numbers have different signs
   else {
     if (left->negative) { // then it will be left - right
+      // (-left) + right  == right - left
       fixpoint_t pos_left = *left;
       pos_left.negative = false;
       return fixpoint_sub(result, &pos_left, right);
     } else { // right - left
+      // left + (-right) == left - right
       fixpoint_t pos_right = *right;
       pos_right.negative = false;
       return fixpoint_sub(result, &pos_right, left);
