@@ -97,6 +97,26 @@ fixpoint_add( fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *righ
 result_t
 fixpoint_sub( fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *right ) {
   // TODO: implement
+  // When left number is negative and right number is positive, then call add and negate the result
+  if (left->negative && !right->negative) {
+    // (-left) - right == -(left + right)
+    fixpoint_t pos_left = *left;
+    fixpoint_t pos_right = *right;
+    pos_left.negative = false;
+    pos_right.negative = false;
+    result_t res = fixpoint_add(result, &pos_left, &pos_right);
+    fixpoint_negate(result);
+    return res;
+  }
+
+  // When both numbers are negative, then convert to addition
+
+  // (-left) - (-right) == right - left
+  if (left->negative && right->negative) {
+    
+
+
+
 }
 
 result_t
