@@ -61,27 +61,34 @@ fixpoint_negate( fixpoint_t *val ) {
 result_t
 fixpoint_add( fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *right ) {
   // TODO: implement  
-  uint32_t max = UINT32_MAX;
-  uint32_t sum_frac = left->frac + right->frac;
-  
-  uint32_t sum_whole = left->whole + right->whole;
-
-  uint32_t carry = (sum_frac < left->frac) ? 1 : 0; // check for overflow in fractional part
 
   // When both numbers have the same sign + addressing negative sign at the end
   if (left->negative == right->negative) {
-     result->whole = sum_whole + carry;
-     result->frac = sum_frac;
-     result->negative = left->negative; // both have same sign, so take either
+    uint32_t sum_frac = left->frac + right->frac;
+    uint32_t sum_whole = left->whole + right->whole;
+    uint32_t carry = (sum_frac < left->frac) ? 1 : 0; // check for overflow in fractional part
+    result->whole = sum_whole + carry;
+    result->frac = sum_frac;
+    result->negative = left->negative; // both have same sign, so take either
     if (sum_whole + carry < left->whole || sum_whole + carry < right->whole) {
       return RESULT_OVERFLOW;  
     } else {
       return RESULT_OK;
     }
   }
-
-  // When the numbers
-
+  // When the numbers have different signs
+  else {
+    if (left->negative) { // then it will be left - right
+      fixpoint_t pos_left = *left;
+      pos_left.negative = false;
+      return fixpoint_sub(result, &pos_left, right);
+    } else { // right - left
+      fixpoint_t pos_right = *right;
+      pos_right.negative = false;
+      return fixpoint_sub(result, &pos_right, left);
+    }
+  }
+  return RESULT_OK; // placeholder to avoid compiler warning
 }
 
 
