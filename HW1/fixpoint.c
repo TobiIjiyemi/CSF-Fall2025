@@ -89,43 +89,48 @@ fixpoint_add( fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *righ
       fixpoint_negate(&neg_left);
 
       // right whole > whole part of left or (whole parts equal and right frac >= left frac) then result is the sign of right
-      if (fixpoint_get_whole(right) > neg_left.whole || fixpoint_get_whole(right) == neg_left.whole && fixpoint_get_frac(right) >= neg_left.frac) {
+      if (fixpoint_get_whole(right) > neg_left.whole || 
+          (fixpoint_get_whole(right) == neg_left.whole && fixpoint_get_frac(right) >= neg_left.frac)) {
         result->negative = fixpoint_is_negative(right);
+      } else {
+        result->negative = fixpoint_is_negative(left);
+      }
 
-        if (fixpoint_get_frac(right) >= neg_left.frac) {
-          result->frac = fixpoint_get_frac(right) - neg_left.frac;
-          result->whole = fixpoint_get_whole(right) - neg_left.whole;
-        } else {
-          // Borrow from whole part
-          if (right->whole <= neg_left.whole) {
-            result->whole = (fixpoint_get_whole(right) - 1) - fixpoint_get_whole(&neg_left);
-            result->frac = (fixpoint_get_frac(right) - + ) - fixpoint_get_frac(&neg_left);
-          } else {
-
-          }
-          result->frac = (right->frac + 100000000) - neg_left.frac; // assuming 8 decimal places
-          result->whole = (right->whole - 1) - neg_left.whole;
-        }
+      
+      if (fixpoint_get_frac(right) >= neg_left.frac) {
+        result->frac = fixpoint_get_frac(right) - neg_left.frac;
+        result->whole = fixpoint_get_whole(right) - neg_left.whole;
+      } else {
+        // Borrow from whole part 
+        result->frac = (fixpoint_get_frac(right) + (1ULL << 32)) - neg_left.frac; 
+        result->whole = (fixpoint_get_whole(right) - 1) - neg_left.whole;
+      }         
+      if (result->whole == 0 && result->frac == 0) {
+        result->negative = false; // zero is not negative
       }
     } else {
       // left + (-right) == left - right
       fixpoint_t neg_right = *right;
       fixpoint_negate(&neg_right);
 
-      if (left->whole > neg_right.whole || left->whole == neg_right.whole && left->frac >= neg_right.frac) {
-        result->negative = left->negative;
+      if (fixpoint_get_whole(left) > neg_right.whole || 
+            (fixpoint_get_whole(left) == neg_right.whole && fixpoint_get_frac(left) >= neg_right.frac)) {
+        result->negative = fixpoint_is_negative(left);
+      } else {
+        result->negative = fixpoint_is_negative(right);
+      }
+      
+      if (fixpoint_get_frac(left) >= neg_right.frac) {
+          result->frac = fixpoint_get_frac(left) - neg_right.frac;
+          result->whole = fixpoint_get_whole(left) - neg_right.whole;
+      } else {
+        // Borrow from whole part
+        result->frac = (fixpoint_get_frac(left) + (1ULL << 32)) - neg_right.frac;
+        result->whole = (fixpoint_get_whole(left) - 1) - neg_right.whole;
+      }
 
-        if (left->frac >= neg_right.frac) {
-          result->frac = left->frac - neg_right.frac;
-          result->whole = left->whole - neg_right.whole;
-        } else {
-          // Borrow from whole part
-          if (left->whole <= neg_right.whole) { 
-            
-          }
-          result->frac = (left->frac + 100000000) - neg_right.frac; // assuming 8 decimal places
-          result->whole = (left->whole - 1) - neg_right.whole;
-        }
+      if (result->whole == 0 && result->frac == 0) {
+        result->negative = false; // zero is not negative
       }
     }
   return RESULT_OK; // placeholder to avoid compiler warning
