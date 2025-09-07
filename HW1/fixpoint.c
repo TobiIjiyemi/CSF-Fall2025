@@ -83,56 +83,56 @@ fixpoint_add( fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *righ
   }
 
   // When the numbers have different signs
-    if (fixpoint_is_negative(left)) {
-      // (-left) + right  = right - left
-      fixpoint_t neg_left = *left;
-      fixpoint_negate(&neg_left);
+  if (fixpoint_is_negative(left) && !fixpoint_is_negative(right)) {
+    // (-left) + right  = right - left
+    fixpoint_t neg_left = *left;
+    fixpoint_negate(&neg_left);
 
-      // right whole > whole part of left or (whole parts equal and right frac >= left frac) then result is the sign of right
-      if (fixpoint_get_whole(right) > neg_left.whole || 
-          (fixpoint_get_whole(right) == neg_left.whole && fixpoint_get_frac(right) >= neg_left.frac)) {
-        result->negative = fixpoint_is_negative(right);
-      } else {
-        result->negative = fixpoint_is_negative(left);
-      }
-
-      
-      if (fixpoint_get_frac(right) >= neg_left.frac) {
-        result->frac = fixpoint_get_frac(right) - neg_left.frac;
-        result->whole = fixpoint_get_whole(right) - neg_left.whole;
-      } else {
-        // Borrow from whole part 
-        result->frac = (fixpoint_get_frac(right) + (1ULL << 32)) - neg_left.frac; 
-        result->whole = (fixpoint_get_whole(right) - 1) - neg_left.whole;
-      }         
-      if (result->whole == 0 && result->frac == 0) {
-        result->negative = false; // zero is not negative
-      }
+    // right whole > whole part of left or (whole parts equal and right frac >= left frac) then result is the sign of right
+    if (fixpoint_get_whole(right) > neg_left.whole || 
+        (fixpoint_get_whole(right) == neg_left.whole && fixpoint_get_frac(right) >= neg_left.frac)) {
+      result->negative = fixpoint_is_negative(right);
     } else {
-      // left + (-right) == left - right
-      fixpoint_t neg_right = *right;
-      fixpoint_negate(&neg_right);
-
-      if (fixpoint_get_whole(left) > neg_right.whole || 
-            (fixpoint_get_whole(left) == neg_right.whole && fixpoint_get_frac(left) >= neg_right.frac)) {
-        result->negative = fixpoint_is_negative(left);
-      } else {
-        result->negative = fixpoint_is_negative(right);
-      }
-      
-      if (fixpoint_get_frac(left) >= neg_right.frac) {
-          result->frac = fixpoint_get_frac(left) - neg_right.frac;
-          result->whole = fixpoint_get_whole(left) - neg_right.whole;
-      } else {
-        // Borrow from whole part
-        result->frac = (fixpoint_get_frac(left) + (1ULL << 32)) - neg_right.frac;
-        result->whole = (fixpoint_get_whole(left) - 1) - neg_right.whole;
-      }
-
-      if (result->whole == 0 && result->frac == 0) {
-        result->negative = false; // zero is not negative
-      }
+      result->negative = fixpoint_is_negative(left);
     }
+
+
+    if (fixpoint_get_frac(right) >= neg_left.frac) {
+      result->frac = fixpoint_get_frac(right) - neg_left.frac;
+      result->whole = fixpoint_get_whole(right) - neg_left.whole;
+    } else {
+      // Borrow from whole part 
+      result->frac = (fixpoint_get_frac(right) + (1ULL << 32)) - neg_left.frac; 
+      result->whole = (fixpoint_get_whole(right) - 1) - neg_left.whole;
+    }         
+    if (result->whole == 0 && result->frac == 0) {
+      result->negative = false; // zero is not negative
+    }
+  } else {
+    // left + (-right) == left - right
+    fixpoint_t neg_right = *right;
+    fixpoint_negate(&neg_right);
+
+    if (fixpoint_get_whole(left) > neg_right.whole || 
+          (fixpoint_get_whole(left) == neg_right.whole && fixpoint_get_frac(left) >= neg_right.frac)) {
+      result->negative = fixpoint_is_negative(left);
+    } else {
+      result->negative = fixpoint_is_negative(right);
+    }
+    
+    if (fixpoint_get_frac(left) >= neg_right.frac) {
+        result->frac = fixpoint_get_frac(left) - neg_right.frac;
+        result->whole = fixpoint_get_whole(left) - neg_right.whole;
+    } else {
+      // Borrow from whole part
+      result->frac = (fixpoint_get_frac(left) + (1ULL << 32)) - neg_right.frac;
+      result->whole = (fixpoint_get_whole(left) - 1) - neg_right.whole;
+    }
+
+    if (result->whole == 0 && result->frac == 0) {
+      result->negative = false; // zero is not negative
+    }
+  }
   return RESULT_OK; // placeholder to avoid compiler warning
 }
 
