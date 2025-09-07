@@ -108,7 +108,34 @@ fixpoint_sub( fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *righ
 
 result_t
 fixpoint_mul( fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *right ) {
-  // TODO: implement
+  //frac * frac
+  if (left->whole == 0 && right->whole == 0) {
+    uint32_t left, right = left->frac, right->frac;
+    uint32_t lexpo, rexpo = 1;
+    while (left > 10) {
+      left /= 10;
+      lexpo += 1;
+    }
+    while (right > 10) {
+      right /= 10;
+      rexpo += 1;
+    }
+    if (lexpo + rexpo > 8 || (lexpo + rexpo == 8 && left * right * 10 > 43)) {
+      RESULT_UNDERFLOW;
+    }
+    left,right = left->frac, right->frac;
+    result->frac = (left/(10^(lexpo+rexpo))) * right;
+    result->whole = 0;
+  }
+  //whole and frac * frac
+
+  //whole and frac * whole and frac
+  //figure out signs at the end of the multiplication operation.
+  if (left->negative == right->negative/**/) {
+    result->bool = false;
+  } else {
+    result->bool = true;
+  }
 }
 
 int
