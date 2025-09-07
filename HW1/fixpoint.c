@@ -62,24 +62,29 @@ result_t
 fixpoint_add( fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *right ) {
   // TODO: implement  
 
-  // When both numbers have the same sign + addressing negative sign at the end
-  if (left->negative == right->negative) {
+  // When both numbers have the same sign
+  if (left->negative == right->negative) { 
     uint32_t sum_frac = left->frac + right->frac;
     uint32_t sum_whole = left->whole + right->whole;
     uint32_t carry = (sum_frac < left->frac) ? 1 : 0; // check for overflow in fractional part
+    
     result->whole = sum_whole + carry;
     result->frac = sum_frac;
     result->negative = left->negative; // both have same sign, so take either
-    if (sum_whole + carry < left->whole || sum_whole + carry < right->whole) {
-      return RESULT_OVERFLOW;  
-    } else {
-      return RESULT_OK;
+    
+    if (result->whole == 0 && result->frac == 0) {
+      result->negative = false; // zero is not negative
     }
+   
+    if (result->whole < left->whole || result->whole < right->whole) {
+      return RESULT_OVERFLOW;  
+    }
+    return RESULT_OK;
   }
+
   // When the numbers have different signs
-  else {
-    if (left->negative) { // then it will be left - right
-      // (-left) + right  == right - left
+    if (left->negative) {
+      // (-left) + right  = right - left
       fixpoint_t pos_left = *left;
       pos_left.negative = false;
       return fixpoint_sub(result, &pos_left, right);
@@ -89,7 +94,6 @@ fixpoint_add( fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *righ
       pos_right.negative = false;
       return fixpoint_sub(result, &pos_right, left);
     }
-  }
   return RESULT_OK; // placeholder to avoid compiler warning
 }
 
@@ -97,33 +101,9 @@ fixpoint_add( fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *righ
 result_t
 fixpoint_sub( fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *right ) {
   // TODO: implement
-    fixpoint_t pos_left = *left;
-    fixpoint_t pos_right = *right;
-  // When left number is negative and right number is positive, then call add and negate the result
-  if (left->negative && !right->negative) {
-    // (-left) - right == -(left + right). 
-    pos_left.negative = false;
-    pos_right.negative = false;
-    result_t res = fixpoint_add(result, &pos_left, &pos_right);
-    fixpoint_negate(result); 
-    return res;
-  } else if (!left->negative && right->negative) {
-    // (left) - (-right) == left + right
-    pos_right.negative = false;
-    result_t res = fixpoint_add(result, &pos_left, &pos_right);
-    return res;
-  }
-
-  // When both numbers are negative, then convert to addition
-
-  // (-left) - (-right) == right - left
-  if (left->negative && right->negative) {
-    
-  }
-
-
-
-
+    fixpoint_t neg_right = *right;
+    fixpoint_negate(&neg_right); 
+    return fixpoint_add(result, left, &neg_right);
 }
 
 result_t
