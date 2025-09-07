@@ -126,6 +126,34 @@ fixpoint_mul( fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *righ
     left,right = left->frac, right->frac;
     result->frac = (left/(10^(lexpo+rexpo))) * right;
     result->whole = 0;
+  } else if (left->whole == 0 || right->whole == 0) {
+    uint32_t whole, fractional, otherfrac;
+    if (left->whole != 0) {
+      whole = left->whole;
+      fractional = left->frac;
+      otherfrac = right->frac;
+      
+    } else {
+      whole = right->whole;
+      fractional = right->frac;
+      otherfrac = left-> frac;
+    }
+    uint32_t otherfexpo = 1;
+    while (fractional > 10) {
+      otherfrac /= 10;
+      otherfexpo += 1;
+    }
+    /*
+
+    //break reuslt into whole and fractional.. like the decimal part, 
+    (whole/(10 ^ otherfexpo)) * otherfrac
+    //take the otherfractional and the fractional , and call fixpoint_mul
+    fixpoint_mul(#, fixpoint_t (0, frac, 0), fixpoint_t (0, otherfrac, 0));
+
+    add the first fractional part with the second fractional part: result->frac;
+    result->whole = 
+
+    */
   }
   //whole and frac * frac
 
