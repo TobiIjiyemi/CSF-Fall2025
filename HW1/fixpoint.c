@@ -63,36 +63,70 @@ fixpoint_add( fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *righ
   // TODO: implement  
 
   // When both numbers have the same sign
-  if (left->negative == right->negative) { 
-    uint32_t sum_frac = left->frac + right->frac;
-    uint32_t sum_whole = left->whole + right->whole;
-    uint32_t carry = (sum_frac < left->frac) ? 1 : 0; // check for overflow in fractional part
+  if (fixpoint_is_negative(left) == fixpoint_is_negative(right)) { 
+    uint32_t sum_frac = fixpoint_get_frac(left) + fixpoint_get_frac(right);
+    uint32_t sum_whole = fixpoint_get_whole(left) + fixpoint_get_whole(right);
+    uint32_t carry = (sum_frac < fixpoint_get_frac(left)) ? 1 : 0; // check for overflow in fractional part
     
     result->whole = sum_whole + carry;
     result->frac = sum_frac;
-    result->negative = left->negative; // both have same sign, so take either
+    result->negative = fixpoint_is_negative(left); // both have same sign, so take either
     
     if (result->whole == 0 && result->frac == 0) {
       result->negative = false; // zero is not negative
     }
    
-    if (result->whole < left->whole || result->whole < right->whole) {
+    if (result->whole < sum_whole) {
       return RESULT_OVERFLOW;  
     }
     return RESULT_OK;
   }
 
   // When the numbers have different signs
-    if (left->negative) {
+    if (fixpoint_is_negative(left)) {
       // (-left) + right  = right - left
-      fixpoint_t pos_left = *left;
-      pos_left.negative = false;
-      return fixpoint_sub(result, &pos_left, right);
-    } else { // right - left
+      fixpoint_t neg_left = *left;
+      fixpoint_negate(&neg_left);
+
+      // right whole > whole part of left or (whole parts equal and right frac >= left frac) then result is the sign of right
+      if (fixpoint_get_whole(right) > neg_left.whole || fixpoint_get_whole(right) == neg_left.whole && fixpoint_get_frac(right) >= neg_left.frac) {
+        result->negative = fixpoint_is_negative(right);
+
+        if (fixpoint_get_frac(right) >= neg_left.frac) {
+          result->frac = fixpoint_get_frac(right) - neg_left.frac;
+          result->whole = fixpoint_get_whole(right) - neg_left.whole;
+        } else {
+          // Borrow from whole part
+          if (right->whole <= neg_left.whole) {
+            result->whole = (fixpoint_get_whole(right) - 1) - fixpoint_get_whole(&neg_left);
+            result->frac = (fixpoint_get_frac(right) - + ) - fixpoint_get_frac(&neg_left);
+          } else {
+
+          }
+          result->frac = (right->frac + 100000000) - neg_left.frac; // assuming 8 decimal places
+          result->whole = (right->whole - 1) - neg_left.whole;
+        }
+      }
+    } else {
       // left + (-right) == left - right
-      fixpoint_t pos_right = *right;
-      pos_right.negative = false;
-      return fixpoint_sub(result, &pos_right, left);
+      fixpoint_t neg_right = *right;
+      fixpoint_negate(&neg_right);
+
+      if (left->whole > neg_right.whole || left->whole == neg_right.whole && left->frac >= neg_right.frac) {
+        result->negative = left->negative;
+
+        if (left->frac >= neg_right.frac) {
+          result->frac = left->frac - neg_right.frac;
+          result->whole = left->whole - neg_right.whole;
+        } else {
+          // Borrow from whole part
+          if (left->whole <= neg_right.whole) { 
+            
+          }
+          result->frac = (left->frac + 100000000) - neg_right.frac; // assuming 8 decimal places
+          result->whole = (left->whole - 1) - neg_right.whole;
+        }
+      }
     }
   return RESULT_OK; // placeholder to avoid compiler warning
 }
