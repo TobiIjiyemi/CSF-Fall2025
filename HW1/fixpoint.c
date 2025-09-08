@@ -97,9 +97,7 @@ fixpoint_add( fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *righ
   uint32_t right_whole = fixpoint_get_whole(right);
   uint32_t right_frac = fixpoint_get_frac(right);
 
-  bool left_is_larger = (left_whole > right_whole) || 
-                    (left_whole == right_whole && left_frac >= right_frac);
-
+  bool left_is_larger = (left_whole > right_whole) || (left_whole == right_whole && left_frac >= right_frac);
 
 
   if (left_is_larger) {
