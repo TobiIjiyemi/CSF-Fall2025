@@ -22,6 +22,13 @@ typedef struct {
   fixpoint_t neg_one;
   fixpoint_t three_quarters;
   fixpoint_t neg_three_quarters;
+  fixpoint_t neg_max;
+  fixpoint_t neg_max_int;
+  fixpoint_t neg_frac_max;
+  fixpoint_t neg_frac_is_one;
+  fixpoint_t neg_one_half;
+  fixpoint_t pos_three_eighths;
+  
 
 } TestObjs;
 
@@ -112,6 +119,13 @@ TestObjs *setup( void ) {
   TEST_FIXPOINT_INIT( &objs->neg_one, 1, 0, true );
   TEST_FIXPOINT_INIT( &objs->three_quarters, 0, 0xC0000000, false );
   TEST_FIXPOINT_INIT( &objs->neg_three_quarters, 0, 0xC0000000, true );
+  TEST_FIXPOINT_INIT( &objs->neg_max, 0xFFFFFFFF, 0xFFFFFFFF, true );
+  TEST_FIXPOINT_INIT( &objs->neg_max_int, 0xFFFFFFFF, 0, true );
+  TEST_FIXPOINT_INIT( &objs->neg_frac_max, 0, 0xFFFFFFFF, true );
+  TEST_FIXPOINT_INIT( &objs->neg_frac_is_one, 0, 1, true );
+
+  TEST_FIXPOINT_INIT( &objs->pos_three_eighths, 0, 0x60000000, false );
+  TEST_FIXPOINT_INIT( &objs->neg_one_half, 0, 0x80000000, true );
 
 
   return objs;
@@ -309,6 +323,22 @@ void test_add_2( TestObjs *objs ) {
   ASSERT( 0x40000000 == result.frac );
   ASSERT( false == result.negative );
 
+  ASSERT ( fixpoint_add (&result, &objs->neg_frac_max, &objs->neg_frac_is_one) == RESULT_OK);
+  ASSERT ( result.whole == 1);
+  ASSERT ( result.frac == 0);
+  ASSERT ( result.negative == true);
+
+  // Making sure overflow is detected and 0 is not negative
+  ASSERT ( fixpoint_add (&result, &objs->neg_max_int, &objs->neg_one) == RESULT_OVERFLOW);
+  ASSERT ( result.whole == 0);
+  ASSERT ( result.frac == 0);
+  ASSERT ( result.negative == false);
+
+  // Testing fraction borrow
+  ASSERT ( fixpoint_add (&result, &objs->pos_three_eighths, &objs->neg_one_half) == RESULT_OK);
+  ASSERT ( result.whole == 0);
+  ASSERT ( result.frac == 0x20000000);
+  ASSERT ( result.negative == true);
 
 }
 
