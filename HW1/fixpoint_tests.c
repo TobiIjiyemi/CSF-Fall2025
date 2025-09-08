@@ -15,6 +15,14 @@ typedef struct {
   fixpoint_t one_and_one_half;
   fixpoint_t one_hundred;
   fixpoint_t neg_eleven;
+
+  fixpoint_t neg_twelve;
+  fixpoint_t neg_thirteen;
+  fixpoint_t pos_twenty;
+  fixpoint_t neg_one;
+  fixpoint_t three_quarters;
+  fixpoint_t neg_three_quarters;
+
 } TestObjs;
 
 // Functions to create and destroy the text fixture
@@ -58,6 +66,7 @@ void test_compare( TestObjs *objs );
 void test_format_hex( TestObjs *objs );
 void test_parse_hex( TestObjs *objs );
 // TODO: add additional test functions
+void test_add_2( TestObjs *objs );
 
 int main( int argc, char **argv ) {
   if ( argc > 1 )
@@ -76,7 +85,9 @@ int main( int argc, char **argv ) {
   TEST( test_compare );
   TEST( test_format_hex );
   TEST( test_parse_hex );
+
   // TODO: call additional test functions
+  TEST( test_add_2 );
 
   TEST_FINI();
 }
@@ -95,6 +106,13 @@ TestObjs *setup( void ) {
   TEST_FIXPOINT_INIT( &objs->neg_eleven, 11, 0, true );
 
   // TODO: initialize additional fixpoint_t instances
+  TEST_FIXPOINT_INIT( &objs->neg_twelve, 12, 0, true );
+  TEST_FIXPOINT_INIT( &objs->neg_thirteen, 13, 0, true );
+  TEST_FIXPOINT_INIT( &objs->pos_twenty, 20, 0, false );
+  TEST_FIXPOINT_INIT( &objs->neg_one, 1, 0, true );
+  TEST_FIXPOINT_INIT( &objs->three_quarters, 0, 0xC0000000, false );
+  TEST_FIXPOINT_INIT( &objs->neg_three_quarters, 0, 0xC0000000, true );
+
 
   return objs;
 }
@@ -234,6 +252,66 @@ void test_add( TestObjs *objs ) {
 
   ASSERT( fixpoint_add( &result, &neg_max, &neg_min ) == RESULT_OVERFLOW );
 }
+
+void test_add_2( TestObjs *objs ) {
+  fixpoint_t result;
+
+  // negative + negative = negative
+  ASSERT( fixpoint_add( &result, &objs->neg_twelve, &objs->neg_thirteen ) == RESULT_OK );
+  ASSERT( 25 == result.whole );
+  ASSERT( 0 == result.frac );
+  ASSERT( true == result.negative );
+
+  // positive + negative = negative
+  ASSERT( fixpoint_add( &result, &objs->neg_thirteen, &objs->one ) == RESULT_OK );
+  ASSERT( 12 == result.whole );
+  ASSERT( 0 == result.frac );
+  ASSERT( true == result.negative );
+
+  // positive + negative = positive
+  ASSERT( fixpoint_add( &result, &objs->pos_twenty, &objs->neg_thirteen ) == RESULT_OK );
+  ASSERT( 7 == result.whole );
+  ASSERT( 0 == result.frac );
+  ASSERT( false == result.negative );
+
+  // positive + positive = positive
+  ASSERT( fixpoint_add( &result, &objs->pos_twenty, &objs->one_and_one_half ) == RESULT_OK );
+  ASSERT( 21 == result.whole );
+  ASSERT( 0x80000000 == result.frac );
+  ASSERT( false == result.negative );
+
+  // positive + negative = zero
+  ASSERT( fixpoint_add( &result, &objs->one, &objs->neg_one ) == RESULT_OK );
+  ASSERT( 0 == result.whole );
+  ASSERT( 0 == result.frac );
+  ASSERT( false == result.negative );
+
+  // negative + negative = negative
+  ASSERT( fixpoint_add( &result, &objs->neg_one, &objs->neg_one ) == RESULT_OK );
+  ASSERT( 2 == result.whole );
+  ASSERT( 0 == result.frac );
+  ASSERT( true == result.negative );
+
+  // Fraction addition works without carry
+  ASSERT( fixpoint_add( &result, &objs->one_and_one_half, &objs->neg_three_eighths ) == RESULT_OK );
+  ASSERT( 1 == result.whole );
+  ASSERT( 0x20000000 == result.frac );
+  ASSERT( false == result.negative );
+
+  // Fraction addition works with carry
+  ASSERT( fixpoint_add( &result, &objs->one_and_one_half, &objs->three_quarters ) == RESULT_OK );
+  ASSERT( 2 == result.whole );
+  ASSERT( 0x40000000 == result.frac );
+  ASSERT( false == result.negative );
+
+  ASSERT( fixpoint_add( &result, &objs->one_and_one_half,&objs->three_quarters ) == RESULT_OK );
+  ASSERT( 2 == result.whole );
+  ASSERT( 0x40000000 == result.frac );
+  ASSERT( false == result.negative );
+
+
+}
+
 
 void test_sub( TestObjs *objs ) {
   // Note: don't modify the provided test functions.
