@@ -108,7 +108,7 @@ fixpoint_add( fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *righ
     } else {
       // Borrow
       result->whole -= 1;
-      result->frac = (UINT32_MAX - (left_frac - right_frac)) + 1;
+      result->frac = (left_frac + (UINT32_MAX - right_frac)) + 1;
     }
   } else {
     // left + (-right) == left - right
@@ -118,7 +118,7 @@ fixpoint_add( fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *righ
       result->frac = right_frac - left_frac;
     } else {
       result->whole -= 1;
-      result->frac = (UINT32_MAX - (right_frac - left_frac)) + 1;
+      result->frac = right_frac + (UINT32_MAX - left_frac) + 1;
     }
   }
   if (result->whole == 0 && result->frac == 0) {

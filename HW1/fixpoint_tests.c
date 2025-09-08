@@ -75,6 +75,7 @@ void test_parse_hex( TestObjs *objs );
 // TODO: add additional test functions
 void test_add_2( TestObjs *objs );
 void test_compare_2( TestObjs *objs );
+void test_sub_2( TestObjs *objs);
 
 int main( int argc, char **argv ) {
   if ( argc > 1 )
@@ -97,6 +98,7 @@ int main( int argc, char **argv ) {
   // TODO: call additional test functions
   TEST( test_add_2 );
   TEST( test_compare_2 );
+  TEST( test_sub_2);
 
   TEST_FINI();
 }
@@ -269,82 +271,6 @@ void test_add( TestObjs *objs ) {
   ASSERT( fixpoint_add( &result, &neg_max, &neg_min ) == RESULT_OVERFLOW );
 }
 
-void test_add_2( TestObjs *objs ) {
-  fixpoint_t result;
-
-  // negative + negative = negative
-  ASSERT( fixpoint_add( &result, &objs->neg_twelve, &objs->neg_thirteen ) == RESULT_OK );
-  ASSERT( 25 == result.whole );
-  ASSERT( 0 == result.frac );
-  ASSERT( true == result.negative );
-
-  // positive + negative = negative
-  ASSERT( fixpoint_add( &result, &objs->neg_thirteen, &objs->one ) == RESULT_OK );
-  ASSERT( 12 == result.whole );
-  ASSERT( 0 == result.frac );
-  ASSERT( true == result.negative );
-
-  // positive + negative = positive
-  ASSERT( fixpoint_add( &result, &objs->pos_twenty, &objs->neg_thirteen ) == RESULT_OK );
-  ASSERT( 7 == result.whole );
-  ASSERT( 0 == result.frac );
-  ASSERT( false == result.negative );
-
-  // positive + positive = positive
-  ASSERT( fixpoint_add( &result, &objs->pos_twenty, &objs->one_and_one_half ) == RESULT_OK );
-  ASSERT( 21 == result.whole );
-  ASSERT( 0x80000000 == result.frac );
-  ASSERT( false == result.negative );
-
-  // positive + negative = zero
-  ASSERT( fixpoint_add( &result, &objs->one, &objs->neg_one ) == RESULT_OK );
-  ASSERT( 0 == result.whole );
-  ASSERT( 0 == result.frac );
-  ASSERT( false == result.negative );
-
-  // negative + negative = negative
-  ASSERT( fixpoint_add( &result, &objs->neg_one, &objs->neg_one ) == RESULT_OK );
-  ASSERT( 2 == result.whole );
-  ASSERT( 0 == result.frac );
-  ASSERT( true == result.negative );
-
-  // Fraction addition works without carry
-  ASSERT( fixpoint_add( &result, &objs->one_and_one_half, &objs->neg_three_eighths ) == RESULT_OK );
-  ASSERT( 1 == result.whole );
-  ASSERT( 0x20000000 == result.frac );
-  ASSERT( false == result.negative );
-
-  // Fraction addition works with carry
-  ASSERT( fixpoint_add( &result, &objs->one_and_one_half, &objs->three_quarters ) == RESULT_OK );
-  ASSERT( 2 == result.whole );
-  ASSERT( 0x40000000 == result.frac );
-  ASSERT( false == result.negative );
-
-  ASSERT( fixpoint_add( &result, &objs->one_and_one_half,&objs->three_quarters ) == RESULT_OK );
-  ASSERT( 2 == result.whole );
-  ASSERT( 0x40000000 == result.frac );
-  ASSERT( false == result.negative );
-
-  ASSERT ( fixpoint_add (&result, &objs->neg_frac_max, &objs->neg_frac_is_one) == RESULT_OK);
-  ASSERT ( result.whole == 1);
-  ASSERT ( result.frac == 0);
-  ASSERT ( result.negative == true);
-
-  // Making sure overflow is detected and 0 is not negative
-  ASSERT ( fixpoint_add (&result, &objs->neg_max_int, &objs->neg_one) == RESULT_OVERFLOW);
-  ASSERT ( result.whole == 0);
-  ASSERT ( result.frac == 0);
-  ASSERT ( result.negative == false);
-
-  // Testing fraction borrow
-  ASSERT ( fixpoint_add (&result, &objs->pos_three_eighths, &objs->neg_one_half) == RESULT_OK);
-  ASSERT ( result.whole == 0);
-  ASSERT ( result.frac == 0x20000000);
-  ASSERT ( result.negative == true);
-
-}
-
-
 void test_sub( TestObjs *objs ) {
   // Note: don't modify the provided test functions.
   // Instead, add new test functions containing your new tests.
@@ -394,24 +320,6 @@ void test_compare( TestObjs *objs ) {
   ASSERT( 1 == fixpoint_compare( &objs->one_half, &objs->neg_three_eighths ) );
 }
 
-void test_compare_2( TestObjs *objs ) {
-  ASSERT( 0 == fixpoint_compare( &objs->one, &objs->one ) ); // one and one
-  
-  ASSERT (1 == fixpoint_compare( &objs->max, &objs->one ) ); // max and one
-  
-  ASSERT (-1 == fixpoint_compare( &objs->neg_three_eighths, &objs->neg_one_half ) ); // -3/8 and -1/2
-
-  ASSERT (1 == fixpoint_compare( &objs->neg_one_half, &objs->neg_three_eighths ) ); // -1/2 and -3/8
-
-  ASSERT (-1 == fixpoint_compare( &objs->neg_max, &objs->max) ); // -max and max
-
-  ASSERT (0 == fixpoint_compare( &objs->neg_max, &objs->neg_max) ); // -max and -max
-
-  ASSERT (-1 == fixpoint_compare( &objs->neg_three_quarters, &objs->neg_one_half) ); // -3/4 and -1/2
-
-  ASSERT (1 == fixpoint_compare( &objs->three_quarters, &objs->one_half) ); // .75 and .5
-
-}
 
 void test_format_hex( TestObjs *objs ) {
   // Note: don't modify the provided test functions.
@@ -489,3 +397,141 @@ void test_parse_hex( TestObjs *objs ) {
 }
 
 // TODO: define additional test functions
+void test_add_2( TestObjs *objs ) {
+  fixpoint_t result;
+
+  // negative + negative = negative
+  ASSERT( fixpoint_add( &result, &objs->neg_twelve, &objs->neg_thirteen ) == RESULT_OK );
+  ASSERT( 25 == result.whole );
+  ASSERT( 0 == result.frac );
+  ASSERT( true == result.negative );
+
+  // positive + negative = negative
+  ASSERT( fixpoint_add( &result, &objs->neg_thirteen, &objs->one ) == RESULT_OK );
+  ASSERT( 12 == result.whole );
+  ASSERT( 0 == result.frac );
+  ASSERT( true == result.negative );
+
+  // positive + negative = positive
+  ASSERT( fixpoint_add( &result, &objs->pos_twenty, &objs->neg_thirteen ) == RESULT_OK );
+  ASSERT( 7 == result.whole );
+  ASSERT( 0 == result.frac );
+  ASSERT( false == result.negative );
+
+  // positive + positive = positive
+  ASSERT( fixpoint_add( &result, &objs->pos_twenty, &objs->one_and_one_half ) == RESULT_OK );
+  ASSERT( 21 == result.whole );
+  ASSERT( 0x80000000 == result.frac );
+  ASSERT( false == result.negative );
+
+  // positive + negative = zero
+  ASSERT( fixpoint_add( &result, &objs->one, &objs->neg_one ) == RESULT_OK );
+  ASSERT( 0 == result.whole );
+  ASSERT( 0 == result.frac );
+  ASSERT( false == result.negative );
+
+  // negative + negative = negative
+  ASSERT( fixpoint_add( &result, &objs->neg_one, &objs->neg_one ) == RESULT_OK );
+  ASSERT( 2 == result.whole );
+  ASSERT( 0 == result.frac );
+  ASSERT( true == result.negative );
+
+  // Fraction addition works without carry
+  ASSERT( fixpoint_add( &result, &objs->one_and_one_half, &objs->neg_three_eighths ) == RESULT_OK );
+  ASSERT( 1 == result.whole );
+  ASSERT( 0x20000000 == result.frac );
+  ASSERT( false == result.negative );
+
+  // Fraction addition works with carry
+  ASSERT( fixpoint_add( &result, &objs->one_and_one_half, &objs->three_quarters ) == RESULT_OK );
+  ASSERT( 2 == result.whole );
+  ASSERT( 0x40000000 == result.frac );
+  ASSERT( false == result.negative );
+
+  ASSERT( fixpoint_add( &result, &objs->one_and_one_half,&objs->three_quarters ) == RESULT_OK );
+  ASSERT( 2 == result.whole );
+  ASSERT( 0x40000000 == result.frac );
+  ASSERT( false == result.negative );
+
+  ASSERT ( fixpoint_add (&result, &objs->neg_frac_max, &objs->neg_frac_is_one) == RESULT_OK);
+  ASSERT ( result.whole == 1);
+  ASSERT ( result.frac == 0);
+  ASSERT ( result.negative == true);
+
+  // Making sure overflow is detected and 0 is not negative
+  ASSERT ( fixpoint_add (&result, &objs->neg_max_int, &objs->neg_one) == RESULT_OVERFLOW);
+  ASSERT ( result.whole == 0);
+  ASSERT ( result.frac == 0);
+  ASSERT ( result.negative == false);
+
+  // Testing fraction borrow
+  ASSERT ( fixpoint_add (&result, &objs->pos_three_eighths, &objs->neg_one_half) == RESULT_OK);
+  ASSERT ( result.whole == 0);
+  ASSERT ( result.frac == 0x20000000);
+  ASSERT ( result.negative == true);
+
+}
+
+void test_sub_2( TestObjs *objs ) {
+  fixpoint_t result;
+
+  ASSERT( fixpoint_sub( &result, &objs->zero, &objs->zero) == RESULT_OK); // 0 - 0
+  ASSERT( 0 == result.whole);
+  ASSERT( 0 == result.frac);
+  ASSERT( false == result.negative);
+
+  ASSERT( fixpoint_sub( &result, &objs->neg_eleven, &objs->neg_thirteen) == RESULT_OK); // -11 - (-13) = -11 + 13 = 2
+  ASSERT( 2 == result.whole);
+  ASSERT( 0 == result.frac);
+  ASSERT( false == result.negative);
+
+  ASSERT( fixpoint_sub( &result, &objs->neg_thirteen, &objs->neg_eleven) == RESULT_OK); // -13 - (-11) = -13 + 11 = -2
+  ASSERT( 2 == result.whole);
+  ASSERT( 0 == result.frac);
+  ASSERT( true == result.negative);
+
+  ASSERT( fixpoint_sub( &result, &objs->neg_three_eighths, &objs->neg_one_half) == RESULT_OK); // -3/8 - (-1/2) = -3/8 + 1/2
+  ASSERT( 0 == result.whole);
+  ASSERT( 0x20000000 == result.frac);
+  ASSERT( false == result.negative);
+
+  ASSERT( fixpoint_sub( &result, &objs->neg_three_quarters, &objs->three_quarters) == RESULT_OK); // -3/4 - 3/4 = -1.5
+  ASSERT( 1 == result.whole);
+  ASSERT( 0x80000000 == result.frac);
+  ASSERT ( true == result.negative);
+
+  ASSERT( fixpoint_sub( &result, &objs->three_quarters, &objs->neg_three_quarters) == RESULT_OK); // 3/4 -(-3/4) = 1.5
+  ASSERT( 1 == result.whole);
+  ASSERT( 0x80000000 == result.frac);
+  ASSERT ( false == result.negative);
+
+  ASSERT( fixpoint_sub( &result, &objs->one_and_one_half, &objs->three_quarters) == RESULT_OK);
+  ASSERT(0 == result.whole);
+  ASSERT( 0xC0000000 == result.frac);
+  ASSERT( false == result.negative);
+
+  ASSERT( fixpoint_sub( &result, &objs->three_quarters, &objs->one_and_one_half) == RESULT_OK); // 3/4 - 1.5
+  ASSERT(0 == result.whole);
+  ASSERT( 0xC0000000 == result.frac);
+  ASSERT( true == result.negative);
+
+}
+
+void test_compare_2( TestObjs *objs ) {
+  ASSERT( 0 == fixpoint_compare( &objs->one, &objs->one ) ); // one and one
+  
+  ASSERT (1 == fixpoint_compare( &objs->max, &objs->one ) ); // max and one
+  
+  ASSERT (1 == fixpoint_compare( &objs->neg_three_eighths, &objs->neg_one_half ) ); // -3/8 and -1/2
+
+  ASSERT (-1 == fixpoint_compare( &objs->neg_one_half, &objs->neg_three_eighths ) ); // -1/2 and -3/8
+
+  ASSERT (-1 == fixpoint_compare( &objs->neg_max, &objs->max) ); // -max and max
+
+  ASSERT (0 == fixpoint_compare( &objs->neg_max, &objs->neg_max) ); // -max and -max
+
+  ASSERT (-1 == fixpoint_compare( &objs->neg_three_quarters, &objs->neg_one_half) ); // -3/4 and -1/2
+
+  ASSERT (1 == fixpoint_compare( &objs->three_quarters, &objs->one_half) ); // .75 and .5
+
+}
