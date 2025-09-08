@@ -108,25 +108,41 @@ fixpoint_sub( fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *righ
 
 result_t
 fixpoint_mul( fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *right ) {
+  uint32_t lwhole, rwhole, lfrac, rfrac = left->whole, right->whole, left->frac, right->frac;
+  
+
+  uint64_t WX = (left->whole << 32) + left->frac;
+  uint64_t Y = right->whole << 32;
+  uint64_t Z = right->frac;
+  
+  uint64_t PRS = WX * Z;;
+  uint64_t TUV = WX * Y;;
+
+  uint64_t product = PRS + (TUV << 32);; //supposed to be 128 bits? but we can't use that
+  
+
   //frac * frac
   if (left->whole == 0 && right->whole == 0) {
-    uint32_t left, right = left->frac, right->frac;
-    uint32_t lexpo, rexpo = 1;
+    uint64_t left, right = left->frac, right->frac;
+    uint32_t product;
+    if (left * right > UINT32_MAX) {
+      RESULT_UNDERFLOW;
+      product = (left * right) % UINT32_MAX;
+    }
+    product = left * right;
+    /*uint32_t lexpo, rexpo = 1;
     while (left > 10) {
       left /= 10;
       lexpo += 1;
     }
     while (right > 10) {
       right /= 10;
-      rexpo += 1;
-    }
-    if (lexpo + rexpo > 8 || (lexpo + rexpo == 8 && left * right * 10 > 43)) {
-      RESULT_UNDERFLOW;
-    }
-    left,right = left->frac, right->frac;
-    result->frac = (left/(10^(lexpo+rexpo))) * right;
+      rexpo += 1;*/
     result->whole = 0;
+    result->frac = product;
   } else if (left->whole == 0 || right->whole == 0) {
+    //if one of the multplied numbers are 0, then we're multplying a fractor by a demical
+    //multiple the whole and fractional part (add the sum) multiply the fractional and fractional part and add those togeher
     uint32_t whole, fractional, otherfrac;
     if (left->whole != 0) {
       whole = left->whole;
@@ -139,21 +155,11 @@ fixpoint_mul( fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *righ
       otherfrac = left-> frac;
     }
     uint32_t otherfexpo = 1;
+    uint64_t product;
     while (fractional > 10) {
       otherfrac /= 10;
       otherfexpo += 1;
     }
-    /*
-
-    //break reuslt into whole and fractional.. like the decimal part, 
-    (whole/(10 ^ otherfexpo)) * otherfrac
-    //take the otherfractional and the fractional , and call fixpoint_mul
-    fixpoint_mul(#, fixpoint_t (0, frac, 0), fixpoint_t (0, otherfrac, 0));
-
-    add the first fractional part with the second fractional part: result->frac;
-    result->whole = 
-
-    */
   }
   //whole and frac * frac
 
