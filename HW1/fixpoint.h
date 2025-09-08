@@ -150,7 +150,7 @@ fixpoint_mul( fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *righ
 //!
 //! @param left pointer to the left fixpoint_t instance to be compared
 //! @param right pointer to the right fixpoint_t instance to be compared
-//! @return -1 if *left < *right, 0 if *left == *right, and -1 if *left > *right
+//! @return -1 if *left < *right, 0 if *left == *right, and 1 if *left > *right
 int
 fixpoint_compare( const fixpoint_t *left, const fixpoint_t *right );
 
