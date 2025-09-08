@@ -203,6 +203,34 @@ fixpoint_mul( fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *righ
 int
 fixpoint_compare( const fixpoint_t *left, const fixpoint_t *right ) {
   // TODO: implement
+
+  uint32_t left_whole = fixpoint_get_whole(left);
+  uint32_t left_frac = fixpoint_get_frac(left);
+
+  uint32_t right_whole = fixpoint_get_whole(right);
+  uint32_t right_frac = fixpoint_get_frac(right);
+
+  if (fixpoint_is_negative(left) && !fixpoint_is_negative(right)) { // if left is negative and right is non-negative
+    return -1;
+  } else if (!fixpoint_is_negative(left) && fixpoint_is_negative(right)) { // if left is non-negative and right is negative
+    return 1;
+  } else {
+    // both non-negative or both positive
+    if (left_whole > right_whole) {
+      return 1; 
+    } else if (left_whole < right_whole) {
+      return -1;
+    } else {
+      // whole parts are equal, compare fractional parts
+      if (left_frac > right_frac) {
+        return 1;
+      } else if (left_frac < right_frac) {
+        return -1;
+      } else {
+        return 0; // both whole and fractional parts are equal
+      }
+    }
+  }
 }
 
 void
