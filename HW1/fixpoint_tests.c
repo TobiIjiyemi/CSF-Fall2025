@@ -74,6 +74,7 @@ void test_format_hex( TestObjs *objs );
 void test_parse_hex( TestObjs *objs );
 // TODO: add additional test functions
 void test_add_2( TestObjs *objs );
+void test_compare_2( TestObjs *objs );
 
 int main( int argc, char **argv ) {
   if ( argc > 1 )
@@ -95,6 +96,7 @@ int main( int argc, char **argv ) {
 
   // TODO: call additional test functions
   TEST( test_add_2 );
+  TEST( test_compare_2 );
 
   TEST_FINI();
 }
@@ -340,7 +342,6 @@ void test_add_2( TestObjs *objs ) {
   ASSERT ( result.frac == 0x20000000);
   ASSERT ( result.negative == true);
 
-
 }
 
 
@@ -391,6 +392,25 @@ void test_compare( TestObjs *objs ) {
   ASSERT( -1 == fixpoint_compare( &objs->zero, &objs->one ) );
   ASSERT( -1 == fixpoint_compare( &objs->neg_three_eighths, &objs->one_half ) );
   ASSERT( 1 == fixpoint_compare( &objs->one_half, &objs->neg_three_eighths ) );
+}
+
+void test_compare_2( TestObjs *objs ) {
+  ASSERT( 0 == fixpoint_compare( &objs->one, &objs->one ) ); // one and one
+  
+  ASSERT (1 == fixpoint_compare( &objs->max, &objs->one ) ); // max and one
+  
+  ASSERT (-1 == fixpoint_compare( &objs->neg_three_eighths, &objs->neg_one_half ) ); // -3/8 and -1/2
+
+  ASSERT (1 == fixpoint_compare( &objs->neg_one_half, &objs->neg_three_eighths ) ); // -1/2 and -3/8
+
+  ASSERT (-1 == fixpoint_compare( &objs->neg_max, &objs->max) ); // -max and max
+
+  ASSERT (0 == fixpoint_compare( &objs->neg_max, &objs->neg_max) ); // -max and -max
+
+  ASSERT (-1 == fixpoint_compare( &objs->neg_three_quarters, &objs->neg_one_half) ); // -3/4 and -1/2
+
+  ASSERT (1 == fixpoint_compare( &objs->three_quarters, &objs->one_half) ); // .75 and .5
+
 }
 
 void test_format_hex( TestObjs *objs ) {

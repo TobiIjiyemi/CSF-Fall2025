@@ -215,19 +215,33 @@ fixpoint_compare( const fixpoint_t *left, const fixpoint_t *right ) {
   } else if (!fixpoint_is_negative(left) && fixpoint_is_negative(right)) { // if left is non-negative and right is negative
     return 1;
   } else {
-    // both non-negative or both positive
-    if (left_whole > right_whole) {
-      return 1; 
-    } else if (left_whole < right_whole) {
-      return -1;
-    } else {
-      // whole parts are equal, compare fractional parts
-      if (left_frac > right_frac) {
-        return 1;
-      } else if (left_frac < right_frac) {
+    if (!fixpoint_is_negative(left) && !fixpoint_is_negative(right)) { // both non-negative
+      if (left_whole > right_whole) {
+        return 1; 
+      } else if (right_whole > left_whole) {
         return -1;
       } else {
-        return 0; // both whole and fractional parts are equal
+        if (left_frac > right_frac) {
+          return 1;
+        } else if (right_frac > left_frac) {
+          return -1;
+        } else {
+          return 0;
+        }
+      }
+    } else {
+      if (left_whole > right_whole) {
+        return -1; 
+      } else if (right_whole > left_whole) {
+        return 1;
+      } else {
+        if (left_frac > right_frac) {
+          return -1;
+        } else if (right_frac > left_frac) {
+          return 1;
+        } else {
+          return 0;
+        }
       }
     }
   }
