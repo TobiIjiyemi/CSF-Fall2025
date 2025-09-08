@@ -1,17 +1,26 @@
 #include <stdio.h>
 #include <stdint.h>
 int main() {
-    uint32_t tester1 = 8989895;
-    printf("%llu\n", tester1);
-    //.332492 * 2389238
-    uint32_t tester2 = 524765786;
-    printf("%llu\n", tester2);
-    uint64_t test3 = (uint64_t)tester1 * tester2;
-    uint32_t moved = (uint32_t)(test3 >> 32);
-    uint32_t fractional = (test3 >> 16); //only the lowset 32 bits are kept from 64 bits. when you convert from
-    //64 bits to 32 bits. 
-    printf("%llu\n", test3);
-    printf("whole part supposedly: %llu\n", moved);
-    printf("fractional part: %llu\n", fractional);
+    uint32_t lwhole= 100;
+    uint32_t lfrac = 5;
+
+    uint32_t rwhole = 1;
+    uint32_t rfrac = 5;
+    
+    uint64_t upperint = ((uint64_t)lwhole * rwhole) << 32;
+    uint64_t middleprods = lfrac * rwhole + lwhole * rfrac;
+    // uint32_t mid = (middleprods >> 32);
+    // upperint += mid;
+    uint64_t lowerint = ((uint64_t)lfrac * rfrac) >> 32;
+
+    printf("upperints: %llu\n", upperint);
+    printf("middleprods: %llu\n", middleprods);
+    printf("lowerint: %llu\n", lowerint);
+    uint64_t product = (upperint + middleprods + lowerint) << 32;
+    uint32_t whole = product >> 32;
+    uint32_t frac = (uint32_t)product;
+    printf("product: %llu\n", product);
+    printf("whole: %u\n", whole);
+    printf("frac: %u\n", frac);
     return 0;
 }
