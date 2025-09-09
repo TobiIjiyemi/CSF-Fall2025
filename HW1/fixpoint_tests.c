@@ -28,7 +28,6 @@ typedef struct {
   fixpoint_t neg_frac_is_one;
   fixpoint_t neg_one_half;
   fixpoint_t pos_three_eighths;
-  
 
 } TestObjs;
 
@@ -130,6 +129,7 @@ TestObjs *setup( void ) {
 
   TEST_FIXPOINT_INIT( &objs->pos_three_eighths, 0, 0x60000000, false );
   TEST_FIXPOINT_INIT( &objs->neg_one_half, 0, 0x80000000, true );
+  TEST_FIXPOINT_INIT( &objs->neg_one, 1, 0, true);
 
 
 
@@ -428,7 +428,7 @@ void test_add_2( TestObjs *objs ) {
   ASSERT( false == result.negative );
 
   // positive + negative = zero
-  ASSERT( fixpoint_add( &result, &objs->one, &objs->neg_one ) == RESULT_OK );
+  ASSERT( fixpoint_add( &result, &objs->one, &objs->neg_one ) == RESULT_OK ); // 1 + (-1)
   ASSERT( 0 == result.whole );
   ASSERT( 0 == result.frac );
   ASSERT( false == result.negative );
@@ -461,11 +461,11 @@ void test_add_2( TestObjs *objs ) {
   ASSERT ( result.frac == 0);
   ASSERT ( result.negative == true);
 
-  // Making sure overflow is detected and 0 is not negative
+  // Making sure overflow is detected and 0
   ASSERT ( fixpoint_add (&result, &objs->neg_max_int, &objs->neg_one) == RESULT_OVERFLOW);
   ASSERT ( result.whole == 0);
   ASSERT ( result.frac == 0);
-  ASSERT ( result.negative == false);
+  ASSERT ( result.negative == true);
 
   // Testing fraction borrow
   ASSERT ( fixpoint_add (&result, &objs->pos_three_eighths, &objs->neg_one_half) == RESULT_OK);
@@ -473,6 +473,10 @@ void test_add_2( TestObjs *objs ) {
   ASSERT ( result.frac == 0x20000000);
   ASSERT ( result.negative == true);
 
+  ASSERT ( fixpoint_add (&result, &objs->one, &objs->neg_one) == RESULT_OK);
+  ASSERT ( result.whole == 0);
+  ASSERT ( result.frac == 0);
+  ASSERT ( result.negative == false);
 }
 
 void test_sub_2( TestObjs *objs ) {

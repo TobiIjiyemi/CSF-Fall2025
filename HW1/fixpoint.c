@@ -85,11 +85,9 @@ fixpoint_add( fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *righ
     result->frac = sum_frac;
     result->negative = fixpoint_is_negative(left); // both have same sign, so take either
     
-    if (result->whole == 0 && result->frac == 0) {
-      result->negative = false; // zero is not negative
-    }
     return overflow_check;
   }
+
   // When the numbers have different signs
   uint32_t left_whole = fixpoint_get_whole(left);
   uint32_t left_frac = fixpoint_get_frac(left);
@@ -97,8 +95,14 @@ fixpoint_add( fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *righ
   uint32_t right_whole = fixpoint_get_whole(right);
   uint32_t right_frac = fixpoint_get_frac(right);
 
-  bool left_is_larger = (left_whole > right_whole) || (left_whole == right_whole && left_frac >= right_frac);
+  if (left_whole == right_whole && left_frac == right_frac) {
+    result->whole = 0;
+    result->frac = 0;
+    result->negative = false;
+    return RESULT_OK;
+  }
 
+  bool left_is_larger = (left_whole > right_whole) || (left_whole == right_whole && left_frac >= right_frac);
 
   if (left_is_larger) {
     result->negative = fixpoint_is_negative(left);
