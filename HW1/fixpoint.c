@@ -131,9 +131,9 @@ fixpoint_add( fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *righ
 result_t
 fixpoint_sub( fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *right ) {
   // TODO: implement
-    fixpoint_t neg_right = *right;
-    fixpoint_negate(&neg_right); 
-    return fixpoint_add(result, left, &neg_right);
+  fixpoint_t neg_right = *right;
+  fixpoint_negate(&neg_right); 
+  return fixpoint_add(result, left, &neg_right);
 }
 
 

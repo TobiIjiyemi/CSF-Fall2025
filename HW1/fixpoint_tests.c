@@ -132,6 +132,9 @@ TestObjs *setup( void ) {
   TEST_FIXPOINT_INIT( &objs->neg_one_half, 0, 0x80000000, true );
 
 
+
+
+
   return objs;
 }
 
@@ -514,6 +517,21 @@ void test_sub_2( TestObjs *objs ) {
   ASSERT(0 == result.whole);
   ASSERT( 0xC0000000 == result.frac);
   ASSERT( true == result.negative);
+
+  ASSERT( fixpoint_sub( &result, &objs->one, &objs->one) == RESULT_OK);
+  ASSERT(0 == result.whole);
+  ASSERT(0 == result.frac);
+  ASSERT( false == result.negative);
+
+  ASSERT( fixpoint_sub( &result, &objs->three_quarters, &objs->three_quarters) == RESULT_OK);
+  ASSERT(0 == result.whole);
+  ASSERT(0 == result.frac);
+  ASSERT( false == result.negative);
+
+  ASSERT( fixpoint_sub( &result, &objs->neg_max_int, &objs->one) == RESULT_OVERFLOW);
+  ASSERT(0 == result.whole);
+  ASSERT(0 == result.frac);
+  ASSERT( false == result.negative);
 
 }
 
