@@ -108,7 +108,7 @@ fixpoint_add( fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *righ
     } else {
       // Borrow
       result->whole -= 1;
-      result->frac = (left_frac + (UINT32_MAX - right_frac)) + 1;
+      result->frac = left_frac + (UINT32_MAX - right_frac) + 1;
     }
   } else {
     // left + (-right) == left - right
@@ -139,6 +139,7 @@ fixpoint_sub( fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *righ
 
 result_t
 fixpoint_mul( fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *right ) {
+  /*
   uint32_t lwhole, rwhole, lfrac, rfrac = left->whole, right->whole, left->frac, right->frac;
   
 
@@ -153,7 +154,6 @@ fixpoint_mul( fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *righ
   
 
   //frac * frac
-  /*
   if (left->whole == 0 && right->whole == 0) {
     uint64_t left, right = left->frac, right->frac;
     uint32_t product;
@@ -162,14 +162,14 @@ fixpoint_mul( fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *righ
       product = (left * right) % UINT32_MAX;
     }
     product = left * right;
-    /*uint32_t lexpo, rexpo = 1;
+    int32_t lexpo, rexpo = 1;
     while (left > 10) {
       left /= 10;
       lexpo += 1;
     }
     while (right > 10) {
       right /= 10;
-      rexpo += 1;*/
+      rexpo += 1;
     result->whole = 0;
     result->frac = product;
   } else if (left->whole == 0 || right->whole == 0) {
@@ -212,8 +212,8 @@ fixpoint_mul( fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *righ
   } else {
     result->bool = true;
   }
-  */
  return RESULT_OK; // placeholder to avoid compiler warning
+ */
 }
 
 
@@ -267,6 +267,36 @@ fixpoint_compare( const fixpoint_t *left, const fixpoint_t *right ) {
 void
 fixpoint_format_hex( fixpoint_str_t *s, const fixpoint_t *val ) {
   // TODO: implement
+  char whole_part[9];
+  char frac_part[9];
+  char temp[19];
+
+  snprintf(whole_part, sizeof(whole_part), "%08x", val->whole);
+  snprintf(frac_part, sizeof(frac_part), "%08x", val->frac);
+
+  // removing the leading zeros
+  char *whole_ptr = whole_part;
+  while (*whole_ptr == '0' && *(whole_ptr + 1) != '\0') {
+    whole_ptr++;
+  }
+
+  // remove trailing zeros
+  int length_of_frac = strlen(frac_part);
+  int i = length_of_frac - 1;
+  while (i > 0 && frac_part[i] == '0') {
+    i--;
+  }
+  frac_part[i + 1] = '\0';
+
+  if (val->negative == true) {
+    snprintf(temp, sizeof(temp), "-%s.%s", whole_ptr, frac_part);
+  } else {
+    snprintf(temp, sizeof(temp), "%s.%s", whole_ptr, frac_part);
+  }
+
+  strncpy(s->str, temp, sizeof(s->str));
+  s->str[sizeof(s->str) - 1] = '\0';
+
 }
 
 bool
