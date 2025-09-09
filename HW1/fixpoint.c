@@ -12,80 +12,142 @@
 
 // TODO: add helper functions
 
+result_t
+fixpoint__add_same_signs(fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *right)
+{
+  // When both numbers have the same sign
+  uint32_t sum_frac = fixpoint_get_frac(left) + fixpoint_get_frac(right);
+  uint32_t sum_whole = fixpoint_get_whole(left) + fixpoint_get_whole(right);
+
+  uint32_t carry = (sum_frac < fixpoint_get_frac(left)) ? 1 : 0; // check for overflow in fractional part
+
+  result_t overflow_check = RESULT_OK;
+
+  if (sum_whole < fixpoint_get_whole(left))
+  {
+    overflow_check = RESULT_OVERFLOW;
+  }
+
+  result->whole = sum_whole + carry;
+
+  if (carry == 1 && result->whole < 1)
+  {
+    overflow_check = RESULT_OVERFLOW;
+  }
+
+  result->frac = sum_frac;
+  result->negative = fixpoint_is_negative(left); // both have same sign, so take either
+
+  return overflow_check;
+}
+
+void fixpoint_add_leftIsLarger(fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *right)
+{
+  uint32_t left_whole = fixpoint_get_whole(left);
+  uint32_t left_frac = fixpoint_get_frac(left);
+
+  uint32_t right_whole = fixpoint_get_whole(right);
+  uint32_t right_frac = fixpoint_get_frac(right);
+
+  result->negative = fixpoint_is_negative(left);
+  result->whole = left_whole - right_whole;
+  if (left_frac >= right_frac)
+  {
+    result->frac = left_frac - right_frac;
+  }
+  else
+  {
+    // Borrow
+    result->whole -= 1;
+    result->frac = left_frac + (UINT32_MAX - right_frac) + 1;
+  }
+}
+
+void fixpoint_add_rightIsLarger(fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *right)
+{
+  uint32_t left_whole = fixpoint_get_whole(left);
+  uint32_t left_frac = fixpoint_get_frac(left);
+
+  uint32_t right_whole = fixpoint_get_whole(right);
+  uint32_t right_frac = fixpoint_get_frac(right);
+
+  // left + (-right) == left - right
+  result->negative = fixpoint_is_negative(right);
+  result->whole = right_whole - left_whole;
+  if (right_frac >= left_frac)
+  {
+    result->frac = right_frac - left_frac;
+  }
+  else
+  {
+    result->whole -= 1;
+    result->frac = right_frac + (UINT32_MAX - left_frac) + 1;
+  }
+}
+
 ////////////////////////////////////////////////////////////////////////
 // Public API functions
 ////////////////////////////////////////////////////////////////////////
 
-void
-fixpoint_init( fixpoint_t *val, uint32_t whole, uint32_t frac, bool negative ) {
-  //might need to check for null input values?
-    if (!val) {
+void fixpoint_init(fixpoint_t *val, uint32_t whole, uint32_t frac, bool negative)
+{
+  // might need to check for null input values?
+  if (!val)
+  {
     return;
   }
 
   val->whole = whole;
   val->frac = frac;
 
-  if (whole == 0 && frac == 0) {
+  if (whole == 0 && frac == 0)
+  {
     val->negative = false;
-  } else {
+  }
+  else
+  {
     val->negative = negative;
   }
 }
 
 uint32_t
-fixpoint_get_whole( const fixpoint_t *val ) {
-  //check for null input values?
+fixpoint_get_whole(const fixpoint_t *val)
+{
+  // check for null input values?
   return val->whole;
 }
 
 uint32_t
-fixpoint_get_frac( const fixpoint_t *val ) {
+fixpoint_get_frac(const fixpoint_t *val)
+{
   return val->frac;
 }
 
-bool
-fixpoint_is_negative( const fixpoint_t *val ) {
+bool fixpoint_is_negative(const fixpoint_t *val)
+{
   return val->negative;
 }
 
-void
-fixpoint_negate( fixpoint_t *val ) {
-  if (val->whole == 0 && val->frac == 0) {
+void fixpoint_negate(fixpoint_t *val)
+{
+  if (val->whole == 0 && val->frac == 0)
+  {
     val->negative = false;
-  } else {
-     val->negative = !(val->negative);
+  }
+  else
+  {
+    val->negative = !(val->negative);
   }
 }
 
 result_t
-fixpoint_add( fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *right ) {
-  // TODO: implement  
+fixpoint_add(fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *right)
+{
+  // TODO: implement
 
-  // When both numbers have the same sign
-  if (fixpoint_is_negative(left) == fixpoint_is_negative(right)) { 
-    
-    uint32_t sum_frac = fixpoint_get_frac(left) + fixpoint_get_frac(right);
-    uint32_t sum_whole = fixpoint_get_whole(left) + fixpoint_get_whole(right);
-    
-    uint32_t carry = (sum_frac < fixpoint_get_frac(left)) ? 1 : 0; // check for overflow in fractional part
-
-    result_t overflow_check = RESULT_OK;
-
-    if (sum_whole < fixpoint_get_whole(left)) {
-      overflow_check = RESULT_OVERFLOW;
-    }
-    
-    result->whole = sum_whole + carry;
-
-    if (carry == 1 && result->whole < 1) {
-      overflow_check = RESULT_OVERFLOW;
-    }
-
-    result->frac = sum_frac;
-    result->negative = fixpoint_is_negative(left); // both have same sign, so take either
-    
-    return overflow_check;
+  if (fixpoint_is_negative(left) == fixpoint_is_negative(right))
+  {
+    return fixpoint__add_same_signs(result, left, right);
   }
 
   // When the numbers have different signs
@@ -95,7 +157,8 @@ fixpoint_add( fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *righ
   uint32_t right_whole = fixpoint_get_whole(right);
   uint32_t right_frac = fixpoint_get_frac(right);
 
-  if (left_whole == right_whole && left_frac == right_frac) {
+  if (left_whole == right_whole && left_frac == right_frac)
+  {
     result->whole = 0;
     result->frac = 0;
     result->negative = false;
@@ -104,46 +167,35 @@ fixpoint_add( fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *righ
 
   bool left_is_larger = (left_whole > right_whole) || (left_whole == right_whole && left_frac >= right_frac);
 
-  if (left_is_larger) {
-    result->negative = fixpoint_is_negative(left);
-    result->whole = left_whole - right_whole;
-    if (left_frac >= right_frac) {
-      result->frac = left_frac - right_frac;
-    } else {
-      // Borrow
-      result->whole -= 1;
-      result->frac = left_frac + (UINT32_MAX - right_frac) + 1;
-    }
-  } else {
-    // left + (-right) == left - right
-    result->negative = fixpoint_is_negative(right);
-    result->whole = right_whole-left_whole;
-    if (right_frac >= left_frac) {
-      result->frac = right_frac - left_frac;
-    } else {
-      result->whole -= 1;
-      result->frac = right_frac + (UINT32_MAX - left_frac) + 1;
-    }
+  if (left_is_larger)
+  {
+    fixpoint_add_leftIsLarger(result, left, right);
   }
-  if (result->whole == 0 && result->frac == 0) {
+  else
+  {
+    fixpoint_add_rightIsLarger(result, left, right);
+  }
+
+  if (result->whole == 0 && result->frac == 0)
+  {
     result->negative = false; // zero is not negative
-    }
+  }
   return RESULT_OK; // placeholder to avoid compiler warning
 }
 
-
 result_t
-fixpoint_sub( fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *right ) {
+fixpoint_sub(fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *right)
+{
   // TODO: implement
   fixpoint_t neg_right = *right;
-  fixpoint_negate(&neg_right); 
+  fixpoint_negate(&neg_right);
   return fixpoint_add(result, left, &neg_right);
 }
 
-
 result_t
-fixpoint_mul( fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *right ) {
-  uint32_t lwhole= left->whole;
+fixpoint_mul(fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *right)
+{
+  uint32_t lwhole = left->whole;
   uint32_t rwhole = right->whole;
   uint32_t lfrac = left->frac;
   uint32_t rfrac = right->frac;
@@ -155,21 +207,31 @@ fixpoint_mul( fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *righ
   result->whole = product >> 32;
   result->frac = product;
 
-  //whole and frac * whole and frac
-  //figure out signs at the end of the multiplication operation.
-  if (left->negative == right->negative) {
+  // whole and frac * whole and frac
+  // figure out signs at the end of the multiplication operation.
+  if (left->negative == right->negative)
+  {
     result->negative = false;
-  } else {
+  }
+  else
+  {
     result->negative = true;
   }
- return RESULT_OK; // placeholder to avoid compiler warning
- */
+  return RESULT_OK; // placeholder to avoid compiler warning
 }
 
-
-int
-fixpoint_compare( const fixpoint_t *left, const fixpoint_t *right ) {
+int fixpoint_compare(const fixpoint_t *left, const fixpoint_t *right)
+{
   // TODO: implement
+
+  if (fixpoint_is_negative(left) && !fixpoint_is_negative(right))
+  { // if left is negative and right is non-negative
+    return -1;
+  }
+  else if (!fixpoint_is_negative(left) && fixpoint_is_negative(right))
+  { // if left is non-negative and right is negative
+    return 1;
+  }
 
   uint32_t left_whole = fixpoint_get_whole(left);
   uint32_t left_frac = fixpoint_get_frac(left);
@@ -177,45 +239,27 @@ fixpoint_compare( const fixpoint_t *left, const fixpoint_t *right ) {
   uint32_t right_whole = fixpoint_get_whole(right);
   uint32_t right_frac = fixpoint_get_frac(right);
 
-  if (fixpoint_is_negative(left) && !fixpoint_is_negative(right)) { // if left is negative and right is non-negative
-    return -1;
-  } else if (!fixpoint_is_negative(left) && fixpoint_is_negative(right)) { // if left is non-negative and right is negative
-    return 1;
-  } else {
-    if (!fixpoint_is_negative(left) && !fixpoint_is_negative(right)) { // both non-negative
-      if (left_whole > right_whole) {
-        return 1; 
-      } else if (right_whole > left_whole) {
-        return -1;
-      } else {
-        if (left_frac > right_frac) {
-          return 1;
-        } else if (right_frac > left_frac) {
-          return -1;
-        } else {
-          return 0;
-        }
-      }
-    } else {
-      if (left_whole > right_whole) {
-        return -1; 
-      } else if (right_whole > left_whole) {
-        return 1;
-      } else {
-        if (left_frac > right_frac) {
-          return -1;
-        } else if (right_frac > left_frac) {
-          return 1;
-        } else {
-          return 0;
-        }
-      }
-    }
-  }
+  int cmp;
+
+  // both same sign
+  if (left_whole > right_whole)
+    cmp = 1;
+  else if (right_whole > left_whole)
+    cmp = -1;
+  else if (left_frac > right_frac)
+    cmp = 1;
+  else if (right_frac > left_frac)
+    cmp = -1;
+  else
+    cmp = 0;
+
+  if (fixpoint_is_negative(left))
+    return -cmp;
+  return cmp;
 }
 
-void
-fixpoint_format_hex( fixpoint_str_t *s, const fixpoint_t *val ) {
+void fixpoint_format_hex(fixpoint_str_t *s, const fixpoint_t *val)
+{
   // TODO: implement
   char whole_part[9];
   char frac_part[9];
@@ -226,30 +270,31 @@ fixpoint_format_hex( fixpoint_str_t *s, const fixpoint_t *val ) {
 
   // removing the leading zeros
   char *whole_ptr = whole_part;
-  while (*whole_ptr == '0' && *(whole_ptr + 1) != '\0') {
+  while (*whole_ptr == '0' && *(whole_ptr + 1) != '\0')
+  {
     whole_ptr++;
   }
 
   // remove trailing zeros
   int length_of_frac = strlen(frac_part);
   int i = length_of_frac - 1;
-  while (i > 0 && frac_part[i] == '0') {
-    i--;
-  }
+  while (i > 0 && frac_part[i] == '0') i--;
   frac_part[i + 1] = '\0';
 
-  if (val->negative == true) {
+  if (val->negative == true)
+  {
     snprintf(temp, sizeof(temp), "-%s.%s", whole_ptr, frac_part);
-  } else {
+  }
+  else
+  {
     snprintf(temp, sizeof(temp), "%s.%s", whole_ptr, frac_part);
   }
 
   strncpy(s->str, temp, sizeof(s->str));
   s->str[sizeof(s->str) - 1] = '\0';
-
 }
 
-bool
-fixpoint_parse_hex( fixpoint_t *val, const fixpoint_str_t *s ) {
+bool fixpoint_parse_hex(fixpoint_t *val, const fixpoint_str_t *s)
+{
   // TODO: implement
 }

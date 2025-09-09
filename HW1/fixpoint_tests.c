@@ -536,7 +536,7 @@ void test_sub_2( TestObjs *objs ) {
   ASSERT( fixpoint_sub( &result, &objs->neg_max_int, &objs->one) == RESULT_OVERFLOW);
   ASSERT(0 == result.whole);
   ASSERT(0 == result.frac);
-  ASSERT( false == result.negative);
+  ASSERT(true== result.negative);
 
 }
 
