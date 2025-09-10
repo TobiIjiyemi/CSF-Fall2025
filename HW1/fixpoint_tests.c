@@ -72,6 +72,8 @@ void test_compare( TestObjs *objs );
 void test_format_hex( TestObjs *objs );
 void test_parse_hex( TestObjs *objs );
 // TODO: add additional test functions
+void test_init_2( TestObjs *objs );
+void test_negate_2( TestObjs *objs);
 void test_add_2( TestObjs *objs );
 void test_compare_2( TestObjs *objs );
 void test_sub_2( TestObjs *objs);
@@ -96,6 +98,8 @@ int main( int argc, char **argv ) {
   TEST( test_parse_hex );
 
   // TODO: call additional test functions
+  TEST (test_init_2);
+  TEST( test_negate_2);
   TEST( test_add_2 );
   TEST( test_compare_2 );
   TEST( test_sub_2);
@@ -132,10 +136,6 @@ TestObjs *setup( void ) {
   TEST_FIXPOINT_INIT( &objs->pos_three_eighths, 0, 0x60000000, false );
   TEST_FIXPOINT_INIT( &objs->neg_one_half, 0, 0x80000000, true );
   TEST_FIXPOINT_INIT( &objs->neg_one, 1, 0, true);
-
-
-
-
 
   return objs;
 }
@@ -403,6 +403,56 @@ void test_parse_hex( TestObjs *objs ) {
 }
 
 // TODO: define additional test functions
+void test_init_2( TestObjs *objs ) {
+  fixpoint_t val;
+
+  fixpoint_init( &val, 1, 1, false );
+  ASSERT( val.whole == 1 );
+  ASSERT( val.frac == 1 );
+  ASSERT( val.negative == false );
+
+  fixpoint_init( &val, 0xad2b55b3, 0xcf5f4473, true );
+  ASSERT( val.whole == 0xad2b55b3 );
+  ASSERT( val.frac == 0xcf5f4473 );
+  ASSERT( val.negative == true );
+
+  fixpoint_init( &val, 500, 500, true );
+  ASSERT( val.whole == 500 );
+  ASSERT( val.frac == 500 );
+  ASSERT( val.negative == true );
+
+}
+
+void test_negate_2( TestObjs *objs) {
+  fixpoint_t result;
+
+  result = objs->neg_one;
+  fixpoint_negate( &result );
+  ASSERT( result.whole == objs->neg_one.whole );
+  ASSERT( result.frac == objs->neg_one.frac );
+  ASSERT( false == result.negative );
+
+  result = objs->neg_three_quarters;
+  fixpoint_negate( &result );
+  ASSERT( result.whole == objs->neg_three_quarters.whole );
+  ASSERT( result.frac == objs->neg_three_quarters.frac );
+  ASSERT( false == result.negative );
+
+  result = objs->pos_twenty;
+  fixpoint_negate( &result );
+  ASSERT( result.whole == objs->pos_twenty.whole );
+  ASSERT( result.frac == objs->pos_twenty.frac );
+  ASSERT( true == result.negative );
+
+  result = objs->neg_frac_is_one;
+  fixpoint_negate( &result );
+  ASSERT( result.whole == objs->neg_frac_is_one.whole );
+  ASSERT( result.frac == objs->neg_frac_is_one.frac );
+  ASSERT( false == result.negative );
+
+}
+
+
 void test_add_2( TestObjs *objs ) {
   fixpoint_t result;
 
