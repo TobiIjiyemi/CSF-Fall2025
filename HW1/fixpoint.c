@@ -196,8 +196,8 @@ result_t
 fixpoint_mul( fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *right ) {
   uint64_t lwhole= left->whole;
   uint64_t rwhole = right->whole;
-  uint64_t lfrac = left->frac; //change to 0x000000 type 
-  uint64_t rfrac = right->frac; //change to 0x00000 type
+  uint64_t lfrac = left->frac;
+  uint64_t rfrac = right->frac;
   uint32_t boxes[4];
 
   uint64_t AB = lfrac * rfrac;
@@ -214,16 +214,19 @@ fixpoint_mul( fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *righ
   boxes[0] = AB << 32;
   boxes[1] = box1Carry;
   boxes[2] = ((CD & 0xFFFF0000) >> 32) + ((EF & 0xFFFF0000) >> 32) + GH + carry; 
-  //printf("CD part: %#08x, EF: %#08x, GH: %#08x\n", ((CD & 0xFFFF0000) >> 32), ((EF & 0xFFFF0000) >> 32), GH);
   boxes[3] = GH >> 32;
-
-  uint64_t secondSum = (EF + GH); //add carryon
 
   //uint64_t finalProduct = boxes[1
   result->whole = boxes[2];
   result->frac = boxes[1];
 
-  
+  if (boxes[0] > 0) {
+    RESULT_UNDERFLOW;
+  }
+
+  if (boxes[3] > 0) {
+    RESULT_OVERFLOW;
+  }
 
   // whole and frac * whole and frac
   // figure out signs at the end of the multiplication operation.
@@ -234,17 +237,8 @@ fixpoint_mul( fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *righ
   else
   {
     result->negative = true;
-  } // placeholder to avoid compiler warning
-
-  if (boxes[0] > 0) {
-    return RESULT_UNDERFLOW;
   }
-
-  if (boxes[3] > 0) {
-    return RESULT_OVERFLOW;
-  }
-
-  return RESULT_OK;
+  return RESULT_OK; // placeholder to avoid compiler warning
 }
 
 int fixpoint_compare(const fixpoint_t *left, const fixpoint_t *right)
@@ -323,8 +317,27 @@ void fixpoint_format_hex(fixpoint_str_t *s, const fixpoint_t *val)
 
 bool
 fixpoint_parse_hex( fixpoint_t *val, const fixpoint_str_t *s ) {
-  uint32_t whole = val->whole;
-  uint32_t frac = val->frac;
-
-  //sscanf()
+  uint32_t whole;
+  uint32_t frac;
+  char neg;
+  sscanf(s->str, "%c", &neg);
+  int matched;
+  int total;
+  val->negative = false;
+  if (neg == '-') {
+    val->negative = true;
+  }
+  if (val->negative == true) {
+    matched = sscanf(s->str, "%c%x.%x", &neg, &whole, &frac);
+    total = 3;
+  } else {
+    matched = sscanf(s->str, "%x.%x", &whole, &frac);
+    total = 2;
+  }
+  if (matched == total) {
+    val->whole = whole;
+    val->frac = frac;
+    return true;
+  }
+  return false;
 }

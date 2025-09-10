@@ -369,7 +369,7 @@ void test_parse_hex( TestObjs *objs ) {
   // Instead, add new test functions containing your new tests.
 
   fixpoint_t val;
-
+  
   ASSERT( true == fixpoint_parse_hex( &val, FIXPOINT_STR( "0.0" ) ) );
   TEST_EQUAL( &objs->zero, &val );
 
