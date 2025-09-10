@@ -223,6 +223,14 @@ fixpoint_mul( fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *righ
   result->whole = boxes[2];
   result->frac = boxes[1];
 
+  if (boxes[0] > 0) {
+    RESULT_UNDERFLOW;
+  }
+
+  if (boxes[3] > 0) {
+    RESULT_OVERFLOW;
+  }
+
   // whole and frac * whole and frac
   // figure out signs at the end of the multiplication operation.
   if (left->negative == right->negative)
