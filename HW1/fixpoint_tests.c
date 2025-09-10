@@ -75,6 +75,7 @@ void test_parse_hex( TestObjs *objs );
 void test_add_2( TestObjs *objs );
 void test_compare_2( TestObjs *objs );
 void test_sub_2( TestObjs *objs);
+void test_format_hex_2 ( TestObjs *objs);
 
 int main( int argc, char **argv ) {
   if ( argc > 1 )
@@ -98,6 +99,7 @@ int main( int argc, char **argv ) {
   TEST( test_add_2 );
   TEST( test_compare_2 );
   TEST( test_sub_2);
+  TEST( test_format_hex_2);
 
   TEST_FINI();
 }
@@ -556,5 +558,29 @@ void test_compare_2( TestObjs *objs ) {
   ASSERT (-1 == fixpoint_compare( &objs->neg_three_quarters, &objs->neg_one_half) ); // -3/4 and -1/2
 
   ASSERT (1 == fixpoint_compare( &objs->three_quarters, &objs->one_half) ); // .75 and .5
+
+}
+
+void test_format_hex_2( TestObjs *objs) {
+
+  fixpoint_str_t s;
+
+  fixpoint_format_hex( &s, &objs->neg_twelve );
+  ASSERT( 0 == strcmp( "-c.0", s.str ) );
+
+  fixpoint_format_hex( &s, &objs->pos_twenty );
+  ASSERT( 0 == strcmp( "14.0", s.str ) );
+
+  fixpoint_format_hex( &s, &objs->neg_three_quarters );
+  ASSERT( 0 == strcmp( "-0.c", s.str ) );
+
+  fixpoint_format_hex( &s, &objs->neg_one_half);
+  ASSERT( 0 == strcmp( "-0.8", s.str ) );
+
+  fixpoint_format_hex( &s, &objs->pos_three_eighths );
+  ASSERT( 0 == strcmp( "0.6", s.str ) );
+
+  fixpoint_format_hex( &s, &objs->neg_max );
+  ASSERT( 0 == strcmp( "-ffffffff.ffffffff", s.str ) );
 
 }
