@@ -72,6 +72,8 @@ void test_compare( TestObjs *objs );
 void test_format_hex( TestObjs *objs );
 void test_parse_hex( TestObjs *objs );
 // TODO: add additional test functions
+void test_get_whole_2( TestObjs *objs );
+void test_get_frac_2( TestObjs *objs );
 void test_init_2( TestObjs *objs );
 void test_negate_2( TestObjs *objs);
 void test_add_2( TestObjs *objs );
@@ -98,6 +100,8 @@ int main( int argc, char **argv ) {
   TEST( test_parse_hex );
 
   // TODO: call additional test functions
+  TEST (test_get_whole_2);
+  TEST (test_get_frac_2);
   TEST (test_init_2);
   TEST( test_negate_2);
   TEST( test_add_2 );
@@ -403,6 +407,26 @@ void test_parse_hex( TestObjs *objs ) {
 }
 
 // TODO: define additional test functions
+void test_get_whole_2( TestObjs *objs) {
+  ASSERT( fixpoint_get_whole( &objs->neg_frac_max ) == 0 );
+  ASSERT( fixpoint_get_whole( &objs->pos_twenty ) == 20 );
+  ASSERT( fixpoint_get_whole( &objs->neg_frac_is_one ) == 0 );
+  ASSERT( fixpoint_get_whole( &objs->neg_max_int ) == 0xFFFFFFFF );
+  ASSERT( fixpoint_get_whole( &objs->neg_thirteen ) == 13 );
+  ASSERT( fixpoint_get_whole( &objs->neg_twelve ) == 12 );
+  
+
+}
+
+void test_get_frac_2( TestObjs *objs) {
+  ASSERT( fixpoint_get_frac( &objs->neg_frac_max ) == 0xFFFFFFFF );
+  ASSERT( fixpoint_get_frac( &objs->pos_twenty ) == 0 );
+  ASSERT( fixpoint_get_frac( &objs->neg_frac_is_one ) == 1 );
+  ASSERT( fixpoint_get_frac( &objs->neg_max_int) == 0 );
+  ASSERT( fixpoint_get_frac( &objs->neg_thirteen ) == 0 );
+  ASSERT( fixpoint_get_frac( &objs->neg_twelve ) == 0 );
+}
+
 void test_init_2( TestObjs *objs ) {
   fixpoint_t val;
 
