@@ -193,19 +193,35 @@ fixpoint_sub(fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *right
 }
 
 result_t
-fixpoint_mul(fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *right)
-{
-  uint32_t lwhole = left->whole;
-  uint32_t rwhole = right->whole;
-  uint32_t lfrac = left->frac;
-  uint32_t rfrac = right->frac;
-  uint32_t upperint = (lwhole * rwhole) >> 32;
-  uint32_t middleprods = lfrac * rwhole + lwhole * rfrac;
-  uint32_t lowerint = (lfrac * rfrac) << 32;
+fixpoint_mul( fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *right ) {
+  uint64_t lwhole= left->whole;
+  uint64_t rwhole = right->whole;
+  uint64_t lfrac = left->frac; //change to 0x000000 type 
+  uint64_t rfrac = right->frac; //change to 0x00000 type
+  uint32_t boxes[4];
 
-  uint64_t product = upperint + middleprods + lowerint;
-  result->whole = product >> 32;
-  result->frac = product;
+  uint64_t AB = lfrac * rfrac;
+  uint64_t CD = lwhole * rfrac;
+  uint64_t EF = lfrac * rwhole;
+  uint64_t GH = rwhole * lwhole;
+
+  uint64_t box1Carry = CD + EF + (AB >> 32);
+  // printf("CD: %#08x, EF: %#0x, AB >> 32: %#08x\n", CD, EF, (AB >> 32));
+  // printf("box1Carry: %#08x\n", box1Carry);
+  uint32_t carry = box1Carry >> 32;
+  // printf("carry: %#08x\n", carry);
+
+  boxes[0] = AB << 32;
+  boxes[1] = box1Carry;
+  boxes[2] = ((CD & 0xFFFF0000) >> 32) + ((EF & 0xFFFF0000) >> 32) + GH + carry; 
+  //printf("CD part: %#08x, EF: %#08x, GH: %#08x\n", ((CD & 0xFFFF0000) >> 32), ((EF & 0xFFFF0000) >> 32), GH);
+  boxes[3] = GH >> 32;
+
+  uint64_t secondSum = (EF + GH); //add carryon
+
+  //uint64_t finalProduct = boxes[1
+  result->whole = boxes[2];
+  result->frac = boxes[1];
 
   // whole and frac * whole and frac
   // figure out signs at the end of the multiplication operation.
@@ -217,7 +233,7 @@ fixpoint_mul(fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *right
   {
     result->negative = true;
   }
-  return RESULT_OK; // placeholder to avoid compiler warning
+ return RESULT_OK; // placeholder to avoid compiler warning
 }
 
 int fixpoint_compare(const fixpoint_t *left, const fixpoint_t *right)
@@ -294,7 +310,10 @@ void fixpoint_format_hex(fixpoint_str_t *s, const fixpoint_t *val)
   s->str[sizeof(s->str) - 1] = '\0';
 }
 
-bool fixpoint_parse_hex(fixpoint_t *val, const fixpoint_str_t *s)
-{
-  // TODO: implement
+bool
+fixpoint_parse_hex( fixpoint_t *val, const fixpoint_str_t *s ) {
+  uint32_t whole = val->whole;
+  uint32_t frac = val->frac;
+
+  //sscanf()
 }

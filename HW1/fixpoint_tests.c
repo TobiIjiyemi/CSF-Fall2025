@@ -309,7 +309,6 @@ void test_mul( TestObjs *objs ) {
   ASSERT( false == result.negative );
 
   ASSERT( fixpoint_mul( &result, &objs->one_and_one_half, &objs->one_hundred ) == RESULT_OK );
-  printf("%u", result.frac);
   ASSERT( 150 == result.whole );
   ASSERT( 0 == result.frac );
   ASSERT( false == result.negative );
