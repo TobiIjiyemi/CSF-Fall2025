@@ -223,13 +223,7 @@ fixpoint_mul( fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *righ
   result->whole = boxes[2];
   result->frac = boxes[1];
 
-  if (boxes[0] > 0) {
-    RESULT_UNDERFLOW;
-  }
-
-  if (boxes[3] > 0) {
-    RESULT_OVERFLOW;
-  }
+  
 
   // whole and frac * whole and frac
   // figure out signs at the end of the multiplication operation.
@@ -240,8 +234,17 @@ fixpoint_mul( fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *righ
   else
   {
     result->negative = true;
+  } // placeholder to avoid compiler warning
+
+  if (boxes[0] > 0) {
+    return RESULT_UNDERFLOW;
   }
- return RESULT_OK; // placeholder to avoid compiler warning
+
+  if (boxes[3] > 0) {
+    return RESULT_OVERFLOW;
+  }
+
+  return RESULT_OK;
 }
 
 int fixpoint_compare(const fixpoint_t *left, const fixpoint_t *right)
