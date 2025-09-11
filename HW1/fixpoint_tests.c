@@ -377,7 +377,6 @@ void test_parse_hex( TestObjs *objs ) {
   TEST_EQUAL( &objs->one, &val );
 
   ASSERT( true == fixpoint_parse_hex( &val, FIXPOINT_STR( "0.8" ) ) );
-  printf("\nobj frac: %llu, val frac: %d\n", (&objs->one_half)->frac, val.frac);
   TEST_EQUAL( &objs->one_half, &val );
 
   ASSERT( true == fixpoint_parse_hex( &val, FIXPOINT_STR( "ffffffff.ffffffff" ) ) );
@@ -399,7 +398,7 @@ void test_parse_hex( TestObjs *objs ) {
   TEST_EQUAL( &objs->one_hundred, &val );
 
   ASSERT( true == fixpoint_parse_hex( &val, FIXPOINT_STR( "-b.0" ) ) );
-  TEST_EQUAL( &objs->neg_eleven, &val );
+  TEST_EQUAL( &objs->neg_eleven, &val);
 
   // Note: this test function doesn't have any tests for invalid
   // hex strings. You should add tests for invalid strings in one of

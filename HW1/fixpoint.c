@@ -206,18 +206,14 @@ fixpoint_mul( fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *righ
   uint64_t GH = rwhole * lwhole;
 
   uint64_t box1Carry = CD + EF + (AB >> 32);
-  // printf("CD: %#08x, EF: %#0x, AB >> 32: %#08x\n", CD, EF, (AB >> 32));
-  // printf("box1Carry: %#08x\n", box1Carry);
   uint32_t carry = box1Carry >> 32;
-  // printf("carry: %#08x\n", carry);
   result_t overflow = RESULT_OK;
 
-  boxes[0] = AB << 32;
+  boxes[0] = AB;
   boxes[1] = box1Carry;
-  boxes[2] = ((CD & 0xFFFF0000) >> 32) + ((EF & 0xFFFF0000) >> 32) + GH + carry; 
-  boxes[3] = GH >> 32;
+  boxes[2] = GH + carry; 
+  boxes[3] = (GH + carry) >> 32;
 
-  //uint64_t finalProduct = boxes[1
   result->whole = boxes[2];
   result->frac = boxes[1];
 
@@ -231,7 +227,7 @@ fixpoint_mul( fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *righ
   }
 
   if (boxes[0] > 0 && boxes[3] > 0) {
-    overflow = RESULT_OVERFLOW | RESULT_OVERFLOW;
+    overflow = RESULT_OVERFLOW | RESULT_UNDERFLOW;
   }
 
   // whole and frac * whole and frac
@@ -323,31 +319,36 @@ void fixpoint_format_hex(fixpoint_str_t *s, const fixpoint_t *val)
 
 bool
 fixpoint_parse_hex( fixpoint_t *val, const fixpoint_str_t *s ) {
-  char whole_str[9];
-  char frac_str[9];
-  int frac_amnt;
-  char neg;
-  sscanf(s->str, "%c", &neg);
-  int matched;
-  int total;
+  const char *ptr = s->str;
   val->negative = false;
-  if (neg == '-') {
+  if (*ptr == '-') {
     val->negative = true;
+    ptr++;
   }
-  if (val->negative == true) {
-    matched = 3;//sscanf(s->str, "%c%8x.%8x", &neg, &whole, &frac);
-    total = 3;
+
+  const char* dot = strchr(ptr, '.');
+
+  if (!dot) {
+    return false;
+  }
+
+  uint32_t wholenum;
+  int whole_len = 0;
+  int frac_len = 0;
+
+  if (sscanf(ptr, "%8x%n", &wholenum, &whole_len) != 1 || whole_len > 8) {
+    return false;
+  }
+  val->whole = wholenum;
+  uint32_t frac = 0;
+  if (*(dot+1) != '\0') {
+    if (sscanf((dot + 1), "%8x%n", &frac, &frac_len) != 1 || frac_len > 8) {
+      return false;
+    }
   } else {
-    matched = 2;//sscanf(s->str, "%8x.%8x", &whole, &frac);
-    total = 2;
+    return false;
   }
- // int len = strlen(frac);
-  //int shift_amount = (8 - len)*4;
-  if (matched == total) {
-    //sscanf(whole, "%x", &(val->whole));
-    // sscanf(frac, "%x", &frac_amnt);
-    // val->frac = frac_amnt << shift_amount;
-    return true;
-  }
-  return false;
+  int shift = (8 - frac_len)*4;
+  val->frac = frac << shift;
+  return true;
 }
