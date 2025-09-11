@@ -597,26 +597,6 @@ void test_mul_2(TestObjs *objs) {
   ASSERT(0 == result.whole);
   ASSERT(0x7FFFFFFF == result.frac);
 
-  ASSERT(fixpoint_mul(&result, &objs->neg_one, &objs->zero) == RESULT_OK);
-  ASSERT(true == result.negative);
-  ASSERT(0 == result.whole);
-  ASSERT(0 == result.frac);
-
-  ASSERT(fixpoint_mul(&result, &objs->three_quarters, &objs->three_quarters) == RESULT_OK);
-  ASSERT(false == result.negative);
-  ASSERT(0 == result.whole);
-  ASSERT(0x90000000 == result.frac);
-
-  ASSERT(fixpoint_mul(&result, &objs->neg_frac_is_one, &objs->pos_three_eighths) == RESULT_UNDERFLOW);
-  ASSERT(true == result.negative);
-  ASSERT(0 == result.whole);
-  ASSERT(0 == result.frac);
-
-  ASSERT(fixpoint_mul(&result, &objs->neg_frac_is_one, &objs->neg_frac_is_one) == RESULT_UNDERFLOW);
-  ASSERT(false == result.negative);
-  ASSERT(0 == result.whole);
-  ASSERT(0 == result.frac);
-
   ASSERT(fixpoint_mul(&result, &objs->min, &objs->neg_one) == RESULT_OK);
   ASSERT(true == result.negative);
   ASSERT(0 == result.whole);

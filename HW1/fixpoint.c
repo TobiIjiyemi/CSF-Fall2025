@@ -199,11 +199,12 @@ fixpoint_mul( fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *righ
   uint64_t lfrac = left->frac;
   uint64_t rfrac = right->frac;
      
-  uint32_t boxes[4];
+  uint32_t boxes[4]; //built to represent full 128 bit block subdivided into 32 bit blocks
   uint64_t AB = lfrac * rfrac;
   uint64_t CD = lwhole * rfrac;
   uint64_t EF = lfrac * rwhole;
   uint64_t GH = rwhole * lwhole;
+
   uint64_t box1Carry = CD + EF + (AB >> 32);
   uint32_t carry = box1Carry >> 32;
   uint64_t box2holder = (CD >> 32) + (EF >> 32) + (uint32_t)GH + carry;
@@ -217,22 +218,21 @@ fixpoint_mul( fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *righ
   boxes[3] = (uint32_t)carry3;
   result->whole = boxes[2];
   result->frac = boxes[1];
-            
-  if (boxes[0] > 0) { overflow = RESULT_UNDERFLOW; }
-  if (boxes[3] > 0 || (carry3 >> 32) > 0) { overflow = RESULT_OVERFLOW; }
-  if (boxes[0] > 0 && (boxes[3] > 0 || (carry3 >> 32) > 0) ) { overflow = RESULT_OVERFLOW | RESULT_UNDERFLOW; } // whole and frac * whole and frac // figure out signs at the end of the multiplication operation.
-  
-  if (left->negative == right->negative) { 
+             
+  if (boxes[0] > 0 && (boxes[3] > 0 || (carry3 >> 32) > 0) ) { overflow = RESULT_OVERFLOW | RESULT_UNDERFLOW; }
+  else if (boxes[0] > 0) { overflow = RESULT_UNDERFLOW; }
+  else if (boxes[3] > 0 || (carry3 >> 32) > 0) { overflow = RESULT_OVERFLOW; }
+    
+  if (left->negative == right->negative || (result->whole == 0 && result->frac == 0 && overflow == RESULT_OK)) { 
     result->negative = false; 
   } else {
     result->negative = true;
-  } 
+  }
   return overflow;
 }
 
 int fixpoint_compare(const fixpoint_t *left, const fixpoint_t *right)
 {
-  // TODO: implement
 
   if (fixpoint_is_negative(left) && !fixpoint_is_negative(right))
   { // if left is negative and right is non-negative
