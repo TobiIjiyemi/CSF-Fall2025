@@ -377,6 +377,7 @@ void test_parse_hex( TestObjs *objs ) {
   TEST_EQUAL( &objs->one, &val );
 
   ASSERT( true == fixpoint_parse_hex( &val, FIXPOINT_STR( "0.8" ) ) );
+  printf("\nobj frac: %llu, val frac: %d\n", (&objs->one_half)->frac, val.frac);
   TEST_EQUAL( &objs->one_half, &val );
 
   ASSERT( true == fixpoint_parse_hex( &val, FIXPOINT_STR( "ffffffff.ffffffff" ) ) );
