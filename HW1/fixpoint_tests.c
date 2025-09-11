@@ -2,6 +2,7 @@
 #include <string.h>
 #include "tctest.h"
 #include "fixpoint.h"
+#include <math.h>
 
 // Test fixture: defines some fixpoint_t instances
 // that can be used by test functions
@@ -28,7 +29,8 @@ typedef struct {
   fixpoint_t neg_frac_is_one;
   fixpoint_t neg_one_half;
   fixpoint_t pos_three_eighths;
-
+  fixpoint_t pos_max_whole_no_frac;
+  fixpoint_t neg_max_whole_no_frac;
 } TestObjs;
 
 // Functions to create and destroy the text fixture
@@ -80,6 +82,8 @@ void test_add_2( TestObjs *objs );
 void test_compare_2( TestObjs *objs );
 void test_sub_2( TestObjs *objs);
 void test_format_hex_2 ( TestObjs *objs);
+void test_mul_2(TestObjs *objs);
+void test_parse_2(TestObjs *objs);
 
 int main( int argc, char **argv ) {
   if ( argc > 1 )
@@ -108,6 +112,8 @@ int main( int argc, char **argv ) {
   TEST( test_compare_2 );
   TEST( test_sub_2);
   TEST( test_format_hex_2);
+  TEST (test_mul_2);
+  TEST (test_parse_2);
 
   TEST_FINI();
 }
@@ -140,6 +146,8 @@ TestObjs *setup( void ) {
   TEST_FIXPOINT_INIT( &objs->pos_three_eighths, 0, 0x60000000, false );
   TEST_FIXPOINT_INIT( &objs->neg_one_half, 0, 0x80000000, true );
   TEST_FIXPOINT_INIT( &objs->neg_one, 1, 0, true);
+  TEST_FIXPOINT_INIT( &objs->pos_max_whole_no_frac, pow(2, 32) -1, 0, false);
+  TEST_FIXPOINT_INIT( &objs->neg_max_whole_no_frac, pow(2, 32) -1, 0, true);
 
   return objs;
 }
@@ -313,6 +321,7 @@ void test_mul( TestObjs *objs ) {
   ASSERT( false == result.negative );
 
   ASSERT( fixpoint_mul( &result, &objs->one_and_one_half, &objs->one_hundred ) == RESULT_OK );
+  printf("\nobj whole: %d\n", result.whole);
   ASSERT( 150 == result.whole );
   ASSERT( 0 == result.frac );
   ASSERT( false == result.negative );
@@ -553,6 +562,129 @@ void test_add_2( TestObjs *objs ) {
   ASSERT ( result.whole == 0);
   ASSERT ( result.frac == 0);
   ASSERT ( result.negative == false);
+}
+
+void test_mul_2(TestObjs *objs) {
+  fixpoint_t result;
+
+
+  ASSERT(fixpoint_mul(&result, &objs->max, &objs->max) == (RESULT_OVERFLOW | RESULT_UNDERFLOW));
+  ASSERT (false == result.negative);
+
+  ASSERT(fixpoint_mul(&result, &objs->neg_max, &objs->max) == (RESULT_OVERFLOW | RESULT_UNDERFLOW));
+  ASSERT (true == result.negative);
+
+  ASSERT(fixpoint_mul(&result, &objs->neg_max, &objs->neg_max) == (RESULT_OVERFLOW | RESULT_UNDERFLOW));
+  ASSERT (false == result.negative);
+
+  ASSERT(fixpoint_mul(&result, &objs->neg_eleven, &objs->one_hundred) == (RESULT_OK));
+  ASSERT (true == result.negative);
+  ASSERT (1100 == result.whole);
+  ASSERT (0 == result.frac);
+
+  ASSERT(fixpoint_mul(&result, &objs->neg_eleven, &objs->neg_one_half) == RESULT_OK);
+  ASSERT(false == result.negative);
+  ASSERT(5 == result.whole);
+  ASSERT(0x80000000 == result.frac);
+
+  ASSERT(fixpoint_mul(&result, &objs->zero, &objs->max) == RESULT_OK);
+  ASSERT(false == result.negative);
+  ASSERT(0 == result.whole);
+  ASSERT(0 == result.frac);
+
+  ASSERT(fixpoint_mul(&result, &objs->one_half, &objs->neg_frac_max) == RESULT_UNDERFLOW);
+  ASSERT(true == result.negative);
+  ASSERT(0 == result.whole);
+  ASSERT(0x7FFFFFFF == result.frac);
+
+  ASSERT(fixpoint_mul(&result, &objs->neg_one, &objs->zero) == RESULT_OK);
+  ASSERT(true == result.negative);
+  ASSERT(0 == result.whole);
+  ASSERT(0 == result.frac);
+
+  ASSERT(fixpoint_mul(&result, &objs->three_quarters, &objs->three_quarters) == RESULT_OK);
+  ASSERT(false == result.negative);
+  ASSERT(0 == result.whole);
+  ASSERT(0x90000000 == result.frac);
+
+  ASSERT(fixpoint_mul(&result, &objs->neg_frac_is_one, &objs->pos_three_eighths) == RESULT_UNDERFLOW);
+  ASSERT(true == result.negative);
+  ASSERT(0 == result.whole);
+  ASSERT(0 == result.frac);
+
+  ASSERT(fixpoint_mul(&result, &objs->neg_frac_is_one, &objs->neg_frac_is_one) == RESULT_UNDERFLOW);
+  ASSERT(false == result.negative);
+  ASSERT(0 == result.whole);
+  ASSERT(0 == result.frac);
+
+  ASSERT(fixpoint_mul(&result, &objs->min, &objs->neg_one) == RESULT_OK);
+  ASSERT(true == result.negative);
+  ASSERT(0 == result.whole);
+  ASSERT(1 == result.frac);
+
+  ASSERT(fixpoint_mul(&result, &objs->min, &objs->neg_one_half) == RESULT_UNDERFLOW);
+  ASSERT(true == result.negative);
+  ASSERT(0 == result.whole);
+  ASSERT(0 == result.frac);
+
+  ASSERT(fixpoint_mul(&result, &objs->min, &objs->min) == RESULT_UNDERFLOW);
+  ASSERT(false == result.negative);
+  ASSERT(0 == result.whole);
+  ASSERT(0 == result.frac);
+
+  ASSERT(fixpoint_mul(&result, &objs->min, &objs->neg_one_half) == RESULT_UNDERFLOW);
+  ASSERT(true == result.negative);
+  ASSERT(0 == result.whole);
+  ASSERT(0 == result.frac);
+
+  ASSERT(fixpoint_mul(&result, &objs->min, &objs->max) == RESULT_UNDERFLOW);
+  ASSERT(false == result.negative);
+  ASSERT(0 == result.whole);
+  ASSERT(0xFFFFFFFF == result.frac);
+
+  ASSERT(fixpoint_mul(&result, &objs->pos_max_whole_no_frac, &objs->pos_max_whole_no_frac) == RESULT_OVERFLOW);
+  ASSERT(false == result.negative);
+  ASSERT(1 == result.whole);
+  ASSERT(0 == result.frac);
+
+  ASSERT(fixpoint_mul(&result, &objs->pos_max_whole_no_frac, &objs->one_and_one_half) == RESULT_OVERFLOW);
+  ASSERT(false == result.negative);
+  ASSERT(0x7FFFFFFE == result.whole);
+  ASSERT(0x80000000 == result.frac);
+
+  ASSERT(fixpoint_mul(&result, &objs->pos_max_whole_no_frac, &objs->one_half) == RESULT_OK);
+  ASSERT(false == result.negative);
+  ASSERT(0x7FFFFFFF == result.whole);
+  ASSERT(0x80000000 == result.frac);
+
+  ASSERT(fixpoint_mul(&result, &objs->pos_max_whole_no_frac, &objs->min) == RESULT_OK);
+  ASSERT(false == result.negative);
+  ASSERT(0 == result.whole);
+  ASSERT(0xFFFFFFFF == result.frac);
+}
+
+void test_parse_2(TestObjs *objs) {
+  fixpoint_t val;
+
+  //9 digits on the whole part should return false
+  ASSERT(false == fixpoint_parse_hex(&val, FIXPOINT_STR("000000000.0")));
+
+  //9 digits on the fractional part should return false
+  ASSERT(false == fixpoint_parse_hex(&val, FIXPOINT_STR("0.000000000")));
+  
+  //invalid hex characters on both sides should return false
+  ASSERT(false == fixpoint_parse_hex(&val, FIXPOINT_STR("x.x")));
+  
+  //invalid hex characters on the left should return false
+  ASSERT(false == fixpoint_parse_hex(&val, FIXPOINT_STR("xasdjfpo.0")));
+
+  //invalid hex characters on the right should return false
+  ASSERT(false == fixpoint_parse_hex(&val, FIXPOINT_STR("0.fjdsapdi")));
+
+  //-0.0 isn't a thing, should return false
+  ASSERT(false == fixpoint_parse_hex(&val, FIXPOINT_STR("-0.0")));
+
+  ASSERT(false == fixpoint_parse_hex(&val, FIXPOINT_STR("-0-0.0")));
 }
 
 void test_sub_2( TestObjs *objs ) {

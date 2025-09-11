@@ -1,30 +1,33 @@
 #include <stdio.h>
 #include <stdint.h>
 int main() {
-    uint64_t lwhole = 2;
+    uint64_t lwhole = 2*32 - 1;
     uint64_t lfrac = 0x80000000;
+    printf("lwhole: %#08x\n", lwhole);
 
-    uint64_t rwhole = 1;
+    uint64_t rwhole = 2*32 - 1;
     uint64_t rfrac = 0x80000000; 
+    printf("rwhole: %#08x\n", rwhole);
     uint32_t boxes[4];
     
     uint64_t AB = lfrac * rfrac;
     uint64_t CD = (lwhole * rfrac);
     uint64_t EF = (lfrac * rwhole);
     uint64_t GH = (lwhole * rwhole);
+    //if (lwhole )
+    printf("\nGH: %#08x\n", GH);
+    printf("\nGH as a llu int: %llu\n", GH);
     uint64_t box1Carry = CD + EF + (AB >> 32);
-    printf("CD: %#08x, EF: %#0x, AB >> 32: %#08x\n", CD, EF, (AB >> 32));
-    printf("box1Carry: %#08x\n", box1Carry);
     uint32_t carry = box1Carry >> 32;
     printf("carry: %#08x\n", carry);
-
+    printf("\ncarry + GH: %#08x, now shifted 32: %#08x\n", (GH + carry), (GH + carry) >> 32);
     boxes[0] = AB << 32;
     boxes[1] = box1Carry;
     boxes[2] = ((CD & 0xFFFF0000) >> 32) + ((EF & 0xFFFF0000) >> 32) + GH + carry; 
-    printf("CD part: %#08x, EF: %#08x, GH: %#08x\n", ((CD & 0xFFFF0000) >> 32), ((EF & 0xFFFF0000) >> 32), GH);
     boxes[3] = GH >> 32;
 
-    uint64_t secondSum = (EF + GH); //add carryon
+    printf("\nboxes[3]: %#08x\n", boxes[3]);
+
 
     //uint64_t finalProduct = boxes[1
     uint32_t whole = boxes[2];

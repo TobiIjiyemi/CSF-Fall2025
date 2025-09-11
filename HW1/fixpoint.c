@@ -192,55 +192,42 @@ fixpoint_sub(fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *right
   return fixpoint_add(result, left, &neg_right);
 }
 
-result_t
-fixpoint_mul( fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *right ) {
+result_t 
+fixpoint_mul( fixpoint_t *result, const fixpoint_t *left, const fixpoint_t *right ) { 
   uint64_t lwhole= left->whole;
   uint64_t rwhole = right->whole;
   uint64_t lfrac = left->frac;
   uint64_t rfrac = right->frac;
+     
   uint32_t boxes[4];
-
   uint64_t AB = lfrac * rfrac;
   uint64_t CD = lwhole * rfrac;
   uint64_t EF = lfrac * rwhole;
   uint64_t GH = rwhole * lwhole;
-
   uint64_t box1Carry = CD + EF + (AB >> 32);
   uint32_t carry = box1Carry >> 32;
+  uint64_t box2holder = (CD >> 32) + (EF >> 32) + (uint32_t)GH + carry;
+  uint32_t carry2 = box2holder >> 32; 
+  uint64_t carry3 = (GH >> 32) + carry2;
+  
   result_t overflow = RESULT_OK;
-
   boxes[0] = AB;
   boxes[1] = box1Carry;
-  boxes[2] = GH + carry; 
-  boxes[3] = (GH + carry) >> 32;
-
+  boxes[2] = (uint32_t)GH + carry;
+  boxes[3] = (uint32_t)carry3;
   result->whole = boxes[2];
   result->frac = boxes[1];
-
+            
+  if (boxes[0] > 0) { overflow = RESULT_UNDERFLOW; }
+  if (boxes[3] > 0 || (carry3 >> 32) > 0) { overflow = RESULT_OVERFLOW; }
+  if (boxes[0] > 0 && (boxes[3] > 0 || (carry3 >> 32) > 0) ) { overflow = RESULT_OVERFLOW | RESULT_UNDERFLOW; } // whole and frac * whole and frac // figure out signs at the end of the multiplication operation.
   
-  if (boxes[0] > 0) {
-    overflow = RESULT_UNDERFLOW;
-  }
-
-  if (boxes[3] > 0) {
-    overflow = RESULT_OVERFLOW;
-  }
-
-  if (boxes[0] > 0 && boxes[3] > 0) {
-    overflow = RESULT_OVERFLOW | RESULT_UNDERFLOW;
-  }
-
-  // whole and frac * whole and frac
-  // figure out signs at the end of the multiplication operation.
-  if (left->negative == right->negative)
-  {
-    result->negative = false;
-  }
-  else
-  {
+  if (left->negative == right->negative) { 
+    result->negative = false; 
+  } else {
     result->negative = true;
-  }
-  return overflow; // placeholder to avoid compiler warning
+  } 
+  return overflow;
 }
 
 int fixpoint_compare(const fixpoint_t *left, const fixpoint_t *right)
@@ -332,20 +319,31 @@ fixpoint_parse_hex( fixpoint_t *val, const fixpoint_str_t *s ) {
     return false;
   }
 
-  uint32_t wholenum;
+  uint32_t wholenum = 0;
   int whole_len = 0;
   int frac_len = 0;
 
-  if (sscanf(ptr, "%8x%n", &wholenum, &whole_len) != 1 || whole_len > 8) {
+  if (sscanf(ptr, "%8x%n", &wholenum, &whole_len) != 1 || whole_len > 8 || whole_len == 0) {
+    return false;
+  } else if ((ptr[whole_len] != *dot)) {
     return false;
   }
   val->whole = wholenum;
   uint32_t frac = 0;
+
+  //making sure there are hex digits after the dot
   if (*(dot+1) != '\0') {
-    if (sscanf((dot + 1), "%8x%n", &frac, &frac_len) != 1 || frac_len > 8) {
+    if (sscanf((dot + 1), "%8x%n", &frac, &frac_len) != 1 || frac_len > 8 || frac_len == 0) {
+      return false;
+    }
+    if (*(dot + 1 + frac_len) != '\0') {
       return false;
     }
   } else {
+    return false;
+  }
+
+  if (val->negative && wholenum == 0 && frac == 0) {
     return false;
   }
   int shift = (8 - frac_len)*4;
