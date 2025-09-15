@@ -16,7 +16,15 @@
 //! @param output_img pointer to the output Image (in which the
 //!                   transformed pixels should be stored)
 void imgproc_complement( struct Image *input_img, struct Image *output_img ) {
-  // TODO: implement
+  int32_t width = input_img->width;
+  int32_t height = input_img->height;
+  for (int i = 0; i < height; i++) {
+    for (int j = 0; j < width; j++) {
+      uint32_t data = input_img->data[i*width + j];
+      int32_t inverted_rgb = ~(data << 8);
+      input_img->data[i*width + j] = ((data >> 24) << 24) + inverted_rgb;
+    }
+  }
 }
 
 //! Transform the input image by swapping the row and column
