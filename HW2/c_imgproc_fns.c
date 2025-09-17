@@ -43,12 +43,13 @@ void imgproc_complement( struct Image *input_img, struct Image *output_img ) {
 //!         width and height are not the same
 int imgproc_transpose( struct Image *input_img, struct Image *output_img ) {
   // TODO: implement
-  int width = input_img->width;
-  int height = input_img->height;
+  uint32_t width = input_img->width;
+  uint32_t height = input_img->height;
   if (height != width) {
     return 0;
   }
 
+  // doesn't really matter which the output's dimension is set equal to since it's a square
   output_img->height = width;
   output_img->width = height;
 
@@ -82,6 +83,29 @@ int imgproc_transpose( struct Image *input_img, struct Image *output_img ) {
 //!                   transformed pixels should be stored)
 void imgproc_ellipse( struct Image *input_img, struct Image *output_img ) {
   // TODO: implement
+  uint32_t width = input_img->width;
+  uint32_t height = input_img->height;
+
+  output_img->width = width;
+  output_img->height = height;
+
+  float a = width/2;
+  float b = height/2;
+
+  for (int x = 0; x < height; x++) {
+    for (int y = 0; y < width; y++) {
+      uint32_t dist_x = abs(a - x);
+      uint32_t dist_y = abs(b - y); 
+
+      uint32_t check_x = (10000 * (dist_x * dist_x)) / (a*a);
+      uint32_t check_y = (10000 * (dist_y * dist_y)) / (b*b);
+
+      if (check_x + check_y <= 10000) {
+        uint32_t data = input_img->data[x * width + y];
+        output_img->data[x * height + y] = data;
+      }
+    }
+  }
 }
 
 //! Transform the input image using an "emboss" effect. The pixels
