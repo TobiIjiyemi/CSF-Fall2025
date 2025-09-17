@@ -18,11 +18,14 @@
 void imgproc_complement( struct Image *input_img, struct Image *output_img ) {
   int32_t width = input_img->width;
   int32_t height = input_img->height;
+  output_img->width = width;
+  output_img->height = height;
   for (int i = 0; i < height; i++) {
     for (int j = 0; j < width; j++) {
       uint32_t data = input_img->data[i*width + j];
-      int32_t inverted_rgb = ~(data << 8);
-      input_img->data[i*width + j] = ((data >> 24) << 24) + inverted_rgb;
+      int32_t inverted_rgb = ~(data >> 8);
+      int32_t alphaval = data << 24;
+      output_img->data[i*width + j] = (inverted_rgb << 8) + (alphaval >> 24);
     }
   }
 }
