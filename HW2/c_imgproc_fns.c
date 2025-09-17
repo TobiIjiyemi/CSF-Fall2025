@@ -89,16 +89,16 @@ void imgproc_ellipse( struct Image *input_img, struct Image *output_img ) {
   output_img->width = width;
   output_img->height = height;
 
-  float a = width/2;
-  float b = height/2;
+  uint32_t a = (float)width/2;
+  uint32_t b = (float)height/2;
 
   for (int x = 0; x < height; x++) {
     for (int y = 0; y < width; y++) {
       uint32_t dist_x = abs(a - x);
       uint32_t dist_y = abs(b - y); 
 
-      uint32_t check_x = (10000 * (dist_x * dist_x)) / (a*a);
-      uint32_t check_y = (10000 * (dist_y * dist_y)) / (b*b);
+      uint32_t check_x = (float)(10000 * (dist_x * dist_x)) / (a*a);
+      uint32_t check_y = (float)(10000 * (dist_y * dist_y)) / (b*b);
 
       if (check_x + check_y <= 10000) {
         uint32_t data = input_img->data[x * width + y];
