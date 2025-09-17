@@ -43,6 +43,21 @@ void imgproc_complement( struct Image *input_img, struct Image *output_img ) {
 //!         width and height are not the same
 int imgproc_transpose( struct Image *input_img, struct Image *output_img ) {
   // TODO: implement
+  int width = input_img->width;
+  int height = input_img->height;
+  if (height != width) {
+    return 0;
+  }
+
+  output_img->height = width;
+  output_img->width = height;
+
+  for (int i = 0; i < height; i++) {
+    for (int j = 0; j < width; j++) {
+      uint32_t data = input_img->data[i * width + j];
+      output_img->data[j * height + i] = data;
+    }
+  }
   return 1;
 }
 
