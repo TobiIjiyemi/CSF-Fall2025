@@ -142,5 +142,17 @@ void imgproc_ellipse( struct Image *input_img, struct Image *output_img ) {
 //! @param output_img pointer to the output Image (in which the
 //!                   transformed pixels should be stored)
 void imgproc_emboss( struct Image *input_img, struct Image *output_img ) {
-  // TODO: implement
+  //two for loops, loop through top row and further left row.
+  //set all bits to 128 bits. 
+  //input_img->data[j]
+  //input_img->data[i * width] i goes through 0 to however many rows,
+  uint32_t width = input_img->width;
+  uint32_t height = input_img->height;
+
+  output_img->width = width;
+  output_img->height = height;
+
+  for (int j = 0; j < width; j++) {
+    output_img->data[j] = 
+  }
 }
