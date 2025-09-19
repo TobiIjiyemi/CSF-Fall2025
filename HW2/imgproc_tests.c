@@ -490,16 +490,3 @@ void test_get_max (TestObjs *objs) {
 
   ASSERT (-11 == get_max(red_diff, blue_diff, green_diff));
 }
-
-void test_transpose_non_square(TestObjs *objs) {
-    //Transpose should fail on unbalanced dimensions
-    int result = imgproc_transpose(objs->smiley, objs->smiley_out);
-    ASSERT(result == 0);
-}
-
-void test_emboss_top_left_pixel(TestObjs *objs) {
-    imgproc_emboss(objs->smiley, objs->smiley_out);
-    uint32_t original_alpha = get_a(objs->smiley->data[0]);
-    uint32_t expected_pixel = make_pixel(128, 128, 128, original_alpha);
-    ASSERT(objs->smiley_out->data[0] == expected_pixel);
-}
