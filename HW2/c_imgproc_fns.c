@@ -112,7 +112,7 @@ void imgproc_complement(struct Image *input_img, struct Image *output_img)
       uint32_t inverted_rgb = ~(data >> 8);
 
       uint32_t alphaval = get_a(data);
-      output_img->data[i * width + j] = (inverted_rgb << 8) + (alphaval >> 24);
+      output_img->data[i*width + j] = (inverted_rgb << 8) + alphaval;
     }
   }
 }
@@ -254,18 +254,15 @@ void imgproc_emboss(struct Image *input_img, struct Image *output_img)
   output_img->width = width;
   output_img->height = height;
 
-  uint32_t setval = 128;
-
-  for (int j = 0; j < width; j++)
-  {
-    uint32_t alpha_val = (input_img->data[j] << 24) >> 24;
-    output_img->data[j] = (setval << 8) + (setval << 16) + (setval << 24) + alpha_val;
+  for (int j = 0; j < width; j++) {
+    uint32_t alpha_val =get_a(input_img->data[j]);
+    output_img->data[j] = make_pixel(128, 128, 128, alpha_val);
   }
 
   for (int i = 0; i < height; i++)
   {
     uint32_t alpha_val = get_a(input_img->data[i * width]);
-    output_img->data[i * width] = (setval << 8) + (setval << 16) + (setval << 24) + alpha_val;
+    output_img->data[i * width] = make_pixel(128, 128, 128, alpha_val);
   }
 
   for (int i = 1; i < height; i++)
@@ -275,9 +272,11 @@ void imgproc_emboss(struct Image *input_img, struct Image *output_img)
       uint32_t alpha_val = get_a(input_img->data[i * width + j]);
       uint32_t current = input_img->data[i * width + j];
       uint32_t upper = input_img->data[(i - 1) * width + (j - 1)];
-      int red_diff = (get_r(upper) - get_r(current));
-      int green_diff = (get_g(upper) - get_g(current));
-      int blue_diff = (get_b(upper) - get_b(current));
+
+      int red_diff = ( ((int)get_r(upper)) - ((int)get_r(current)) );
+      int green_diff = ( ((int)get_g(upper)) - ((int)get_g(current)) );
+      int blue_diff = ( ((int)get_b(upper)) - ((int)get_b(current)) );
+
       int diff_max = get_max(red_diff, green_diff, blue_diff);
       int setval = 128 + diff_max;
       if (setval < 0)
@@ -288,8 +287,7 @@ void imgproc_emboss(struct Image *input_img, struct Image *output_img)
       {
         setval = 255;
       }
-      uint32_t setval32 = (uint32_t)setval;
-      output_img->data[i * width + j] = (setval32 << 8) + (setval32 << 16) + (setval32 << 24) + alpha_val;
+      output_img->data[i * width + j] = make_pixel(setval, setval, setval, alpha_val);
     }
   }
 }
