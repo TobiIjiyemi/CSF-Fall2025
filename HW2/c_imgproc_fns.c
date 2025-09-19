@@ -189,11 +189,6 @@ void imgproc_ellipse(struct Image *input_img, struct Image *output_img)
   output_img->width = width;
   output_img->height = height;
 
-  for (int i = 0; i < width * height; i++)
-  {
-    output_img->data[i] = make_pixel(0, 0, 0, 255);
-  }
-
   for (uint32_t row = 0; row < height; row++)
   {
     for (uint32_t col = 0; col < width; col++)
@@ -208,7 +203,7 @@ void imgproc_ellipse(struct Image *input_img, struct Image *output_img)
         uint32_t a = get_a(pixel);
 
         output_img->data[compute_index(output_img, row, col)] = make_pixel(r, g, b, a);
-      }
+      } 
     }
   }
 }
