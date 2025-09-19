@@ -379,8 +379,17 @@ void test_get_RGBA_functions ( TestObjs *objs ) {
   uint32_t pixel = objs->smiley->data[2];
 
   uint32_t r = get_r(pixel);
+  uint32_t g = get_g(pixel);
+  uint32_t b = get_b(pixel);
+  uint32_t a = get_a(pixel);
 
   uint32_t expected_r = (pixel >> 24);
+  uint32_t expected_g = (pixel << 8) >> 24;
+  uint32_t expected_b = (pixel << 16) >> 24;
+  uint32_t expected_a = (pixel << 24) >> 24;
 
   ASSERT (r == expected_r);
+  ASSERT (g == expected_g);
+  ASSERT (b == expected_b);
+  ASSERT (a == expected_a);
 }
