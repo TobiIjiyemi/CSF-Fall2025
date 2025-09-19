@@ -17,7 +17,7 @@
 //!                   transformed pixels should be stored)
 
 uint32_t get_r(uint32_t data) {
-  return  (data >> 24);
+  return (data >> 24);
 }
 
 uint32_t get_g(uint32_t data) {
@@ -77,8 +77,8 @@ void imgproc_complement( struct Image *input_img, struct Image *output_img ) {
   for (int i = 0; i < height; i++) {
     for (int j = 0; j < width; j++) {
       uint32_t data = input_img->data[i*width + j];
-      int32_t inverted_rgb = ~(data >> 8);
-      int32_t alphaval = get_a(data);
+      uint32_t inverted_rgb = ~(data >> 8);
+      uint32_t alphaval = get_a(data);
       output_img->data[i*width + j] = (inverted_rgb << 8) + (alphaval >> 24);
     }
   }
@@ -245,7 +245,8 @@ void imgproc_emboss( struct Image *input_img, struct Image *output_img ) {
       } else if (setval > 255) {
         setval = 255;
       }
-      output_img->data[i * width + j] = (setval << 8) + (setval << 16) + (setval << 24) + alpha_val;
+      uint32_t setval32 = (uint32_t) setval;
+      output_img->data[i * width + j] = (setval32 << 8) + (setval32 << 16) + (setval32 << 24) + alpha_val;
     }
   }
 }
