@@ -400,6 +400,26 @@ void test_get_RGBA_functions ( TestObjs *objs ) {
   ASSERT (a == expected_a);
 }
 
+void test_get_RGBA_functions_with_Image( TestObjs *objs) {
+  struct Picture sq_test_pic = {
+    TEST_COLORS,
+    12, // width
+    12, // height
+    "rrrrrr      "
+    " ggggg      "
+    "  bbbb      "
+    "   mmm      "
+    "    cc      "
+    "     r      "
+    "            "
+    "            "
+    "            "
+    "            "
+    "            "
+    "            "
+  };
+}
+
 void test_make_pixel ( TestObjs *objs ) {
   uint32_t data = objs->smiley->data[2];
 
@@ -424,4 +444,18 @@ void test_is_ellipse ( TestObjs *objs ) {
   int row = (img->height / 2) + 1;
   int col = (img->width / 2) + 1;
   ASSERT (1 == is_in_ellipse(img, row, col));
+}
+
+void test_get_max (TestObjs *objs) {
+  int red_diff = -233;
+  int green_diff = 50;
+  int blue_diff = 100;
+
+  ASSERT (-233 == get_max(red_diff, green_diff, blue_diff));
+
+  red_diff = 100;
+  green_diff = -100;
+  blue_diff = -100;
+
+  // ASSERT (100 = get_max(red_diff, gree))
 }

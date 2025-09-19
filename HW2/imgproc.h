@@ -98,5 +98,5 @@ uint32_t make_pixel(uint32_t r, uint32_t g, uint32_t b, uint32_t a);
 int is_in_ellipse(struct Image *img, int32_t row, int32_t col);
 
 int32_t compute_index( struct Image *img, int32_t row, int32_t col );
-
+int get_max(int red_d, int blue_d, int green_d);
 #endif // IMGPROC_H
