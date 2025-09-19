@@ -15,6 +15,43 @@
 //! @param input_img pointer to the input Image
 //! @param output_img pointer to the output Image (in which the
 //!                   transformed pixels should be stored)
+
+uint32_t get_r(uint32_t data) {
+  return  (data >> 24);
+}
+
+uint32_t get_g(uint32_t data) {
+  return (data << 8) >> 24;
+}
+
+uint32_t get_b(uint32_t data) {
+  return (data << 16) >> 24;
+}
+
+uint32_t get_a(uint32_t data) {
+  return (data << 24) >> 24;
+}
+
+//! For all other pixels, we consider the pixel's color component
+//! values r, g, and b, and also the pixel's upper-left neighbor's
+//! color component values nr, ng, and nb. In comparing the color
+//! component values of the pixel and its upper-left neighbor,
+//! we consider the differences (nr-r), (ng-g), and (nb-b).
+//! Whichever of these differences has the largest absolute value
+//! we refer to as diff. (Note that in the case that more than one
+//! difference has the same absolute value, the red difference has
+//! priority over green and blue, and the green difference has priority
+//! over blue.)
+int get_max(int red_d, int blue_d, int green_d) {
+  if (abs(red_d) >= abs(blue_d) && abs(red_d) >= abs(green_d)) {
+    return red_d;
+  }
+  if (abs(green_d) >= abs(blue_d)) {
+    return green_d;
+  }
+  return blue_d;
+}
+
 void imgproc_complement( struct Image *input_img, struct Image *output_img ) {
   int32_t width = input_img->width;
   int32_t height = input_img->height;
@@ -24,7 +61,7 @@ void imgproc_complement( struct Image *input_img, struct Image *output_img ) {
     for (int j = 0; j < width; j++) {
       uint32_t data = input_img->data[i*width + j];
       int32_t inverted_rgb = ~(data >> 8);
-      int32_t alphaval = data << 24;
+      int32_t alphaval = get_a(data);
       output_img->data[i*width + j] = (inverted_rgb << 8) + (alphaval >> 24);
     }
   }
@@ -152,7 +189,34 @@ void imgproc_emboss( struct Image *input_img, struct Image *output_img ) {
   output_img->width = width;
   output_img->height = height;
 
+  uint32_t setval = 128;
+
   for (int j = 0; j < width; j++) {
-    output_img->data[j] = 
+    uint32_t alpha_val = (input_img->data[j] << 24) >> 24;
+    output_img->data[j] = (setval << 8) + (setval << 16) + (setval << 24) + alpha_val;
+  }
+
+  for (int i = 0; i < height; i++) {
+    uint32_t alpha_val = get_a(input_img->data[i * width]);
+    output_img->data[i * width] = (setval << 8) + (setval << 16) + (setval << 24) + alpha_val;
+  }
+  
+  for (int i = 1; i < height; i++) {
+    for (int j = 1; j < width; j++) {
+      uint32_t alpha_val = get_a(input_img->data[i * width + j]);
+      uint32_t current = input_img->data[i * width + j];
+      uint32_t upper = input_img->data[(i - 1) * width + (j - 1)];
+      int red_diff = (get_r(upper) - get_r(current));
+      int green_diff = (get_g(upper) - get_g(current));
+      int blue_diff = (get_b(upper) - get_b(current));
+      int diff_max = get_max(red_diff, green_diff, blue_diff);
+      int setval = 128 + diff_max;
+      if (setval < 0) {
+        setval = 0;
+      } else if (setval > 255) {
+        setval = 255;
+      }
+      output_img->data[i * width + j] = (setval << 8) + (setval << 16) + (setval << 24) + alpha_val;
+    }
   }
 }
