@@ -32,6 +32,23 @@ uint32_t get_a(uint32_t data) {
   return (data << 24) >> 24;
 }
 
+uint32_t make_pixel (uint32_t r, uint32_t g, uint32_t b, uint32_t a) {
+  uint32_t pixel = 0;
+  pixel += r;
+  pixel = pixel << 8;
+
+  pixel += g;
+  pixel = pixel << 8;
+
+  pixel += b;
+  pixel = pixel << 8;
+
+  pixel += a;
+  return pixel;
+}
+
+
+
 //! For all other pixels, we consider the pixel's color component
 //! values r, g, and b, and also the pixel's upper-left neighbor's
 //! color component values nr, ng, and nb. In comparing the color
@@ -123,27 +140,38 @@ int imgproc_transpose( struct Image *input_img, struct Image *output_img ) {
 //!                   transformed pixels should be stored)
 void imgproc_ellipse( struct Image *input_img, struct Image *output_img ) {
   // TODO: implement
+
   uint32_t width = input_img->width;
   uint32_t height = input_img->height;
 
   output_img->width = width;
   output_img->height = height;
 
-  int a = (int)width/2;
-  int b = (int)height/2;
+  for (int i = 0; i < width * height; i++) {
+    output_img->data[i] = make_pixel(0, 0, 0, 255);
+  }
 
-  for (uint32_t rows = 0; rows < height; rows++) {
+  int a_diff = width/2;
+  int b_diff = height/2;
+
+  for (uint32_t row = 0; row < height; row++) {
     for (uint32_t col = 0; col < width; col++) {
       
-      int dist_x = (int)(col - a);
-      int dist_y = (int)(rows - b); 
+      int dist_x = (col - a_diff);
+      int dist_y = (row - b_diff); 
 
-      int check_x = (10000 * (dist_x * dist_x)) / (a*a);
-      int check_y = (10000 * (dist_y * dist_y)) / (b*b);
+      uint32_t check_x = (int)((10000 * (dist_x * dist_x)) / (a_diff*a_diff));
+      uint32_t check_y = (int)((10000 * (dist_y * dist_y)) / (b_diff*b_diff));
 
       if (check_x + check_y <= 10000) {
-        uint32_t data = input_img->data[rows * width + col];
-        output_img->data[rows * width + col] = data;
+        uint32_t pixel = input_img->data[row * width + col];
+        
+        uint32_t r = get_r(pixel);
+        uint32_t g = get_g(pixel);
+        uint32_t b = get_b(pixel);
+        uint32_t a = get_a(pixel);
+        
+        output_img->data[row * width + col] = make_pixel(r, g, b, a);
       } 
     }
   }
