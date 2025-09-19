@@ -400,24 +400,24 @@ void test_get_RGBA_functions ( TestObjs *objs ) {
   ASSERT (a == expected_a);
 }
 
-void test_get_RGBA_functions_with_Image( TestObjs *objs) {
-  struct Picture sq_test_pic = {
-    TEST_COLORS,
-    12, // width
-    12, // height
-    "rrrrrr      "
-    " ggggg      "
-    "  bbbb      "
-    "   mmm      "
-    "    cc      "
-    "     r      "
-    "            "
-    "            "
-    "            "
-    "            "
-    "            "
-    "            "
-  };
+void test_get_RGBA_edge_cases(TestObjs *objs) {
+  uint32_t black_pixel = 0x000000FF;
+  ASSERT(get_r(black_pixel) == 0);
+  ASSERT(get_g(black_pixel) == 0);
+  ASSERT(get_b(black_pixel) == 0);
+  ASSERT(get_a(black_pixel) == 255);
+
+  uint32_t white_pixel = 0xFFFFFF00;
+  ASSERT(get_r(white_pixel) == 255);
+  ASSERT(get_g(white_pixel) == 255);
+  ASSERT(get_b(white_pixel) == 255);
+  ASSERT(get_a(white_pixel) == 0);
+
+  uint32_t mixed_pixel = 0x1A2B3C4D;
+  ASSERT(get_r(mixed_pixel) == 0x1A);
+  ASSERT(get_g(mixed_pixel) == 0x2B);
+  ASSERT(get_b(mixed_pixel) == 0x3C);
+  ASSERT(get_a(mixed_pixel) == 0x4D);
 }
 
 void test_make_pixel ( TestObjs *objs ) {
@@ -444,18 +444,62 @@ void test_is_ellipse ( TestObjs *objs ) {
   int row = (img->height / 2) + 1;
   int col = (img->width / 2) + 1;
   ASSERT (1 == is_in_ellipse(img, row, col));
+
+  row = 0;
+  col = 0;
+  ASSERT (0 == is_in_ellipse(img, row, col));
 }
+
+void test_is_in_ellipse_boundaries(TestObjs *objs) {
+    struct Image *img = objs->smiley;
+    uint32_t width = img->width;
+    uint32_t height = img->height;
+
+    int32_t center_col = width / 2;
+    int32_t center_row = height / 2;
+
+    ASSERT(is_in_ellipse(img, center_row, width - 1) == 1);
+    ASSERT(is_in_ellipse(img, height - 1, center_col) == 1);
+    ASSERT(is_in_ellipse(img, 0, 0) == 0);
+    ASSERT(is_in_ellipse(img, height - 1, width - 1) == 0);
+}
+
 
 void test_get_max (TestObjs *objs) {
   int red_diff = -233;
   int green_diff = 50;
   int blue_diff = 100;
 
-  ASSERT (-233 == get_max(red_diff, green_diff, blue_diff));
+  ASSERT (-233 == get_max(red_diff, blue_diff, green_diff));
 
   red_diff = 100;
   green_diff = -100;
   blue_diff = -100;
 
-  // ASSERT (100 = get_max(red_diff, gree))
+  ASSERT (100 == get_max(red_diff, blue_diff, green_diff));
+
+  red_diff = -3;
+  green_diff = -100;
+  blue_diff = 100;
+
+  ASSERT (-100 == get_max(red_diff, blue_diff, green_diff));
+
+  red_diff = -10;
+  green_diff = 10;
+  blue_diff = -11;
+
+  ASSERT (-11 == get_max(red_diff, blue_diff, green_diff));
+}
+
+void test_transpose_non_square(TestObjs *objs) {
+    //Transpose should fail on unbalanced dimensions
+    int result = imgproc_transpose(objs->smiley, objs->smiley_out);
+    ASSERT(result == 0);
+}
+
+void test_emboss_top_left_pixel(TestObjs *objs) {
+    imgproc_emboss(objs->smiley, objs->smiley_out);
+    uint32_t original_alpha = get_a(objs->smiley->data[0]);
+    uint32_t expected_pixel = make_pixel(128, 128, 128, original_alpha);
+    ASSERT(objs->smiley_out->data[0] == expected_pixel);
 }
