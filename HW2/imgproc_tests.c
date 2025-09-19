@@ -94,6 +94,8 @@ void test_transpose_basic( TestObjs *objs );
 void test_ellipse_basic( TestObjs *objs );
 void test_emboss_basic( TestObjs *objs );
 // TODO: add prototypes for additional test functions
+void test_get_RGBA_functions( TestObjs *objs );
+
 
 int main( int argc, char **argv ) {
   // allow the specific test to execute to be specified as the
@@ -110,6 +112,8 @@ int main( int argc, char **argv ) {
   TEST( test_transpose_basic );
   TEST( test_ellipse_basic );
   TEST( test_emboss_basic );
+
+  TEST (test_get_RGBA_functions);
 
   TEST_FINI();
 }
@@ -368,4 +372,15 @@ void test_emboss_basic( TestObjs *objs ) {
   ASSERT( images_equal( objs->smiley_out, smiley_emboss_expected ) );
 
   destroy_img( smiley_emboss_expected );
+}
+
+
+void test_get_RGBA_functions ( TestObjs *objs ) {
+  uint32_t pixel = objs->smiley->data[2];
+
+  uint32_t r = get_r(pixel);
+
+  uint32_t expected_r = (pixel >> 24);
+
+  ASSERT (r == expected_r);
 }

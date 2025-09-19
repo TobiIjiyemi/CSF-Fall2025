@@ -71,6 +71,11 @@ int is_in_ellipse(struct Image *img, int32_t row, int32_t col)
   else return 0;
 }
 
+int32_t compute_index( struct Image *img, int32_t row, int32_t col ) {
+  int width = img->width;
+  return row * width + col;
+ }
+
 //! For all other pixels, we consider the pixel's color component
 //! values r, g, and b, and also the pixel's upper-left neighbor's
 //! color component values nr, ng, and nb. In comparing the color
@@ -96,7 +101,6 @@ int get_max(int red_d, int blue_d, int green_d)
 
 void imgproc_complement(struct Image *input_img, struct Image *output_img)
 {
-
   int32_t width = input_img->width;
   int32_t height = input_img->height;
 
@@ -149,8 +153,8 @@ int imgproc_transpose(struct Image *input_img, struct Image *output_img)
   {
     for (int j = 0; j < width; j++)
     {
-      uint32_t data = input_img->data[i * width + j];
-      output_img->data[j * height + i] = data;
+      uint32_t data = input_img->data[compute_index(input_img, i, j)];
+      output_img->data[compute_index(output_img, j, i)] = data;
     }
   }
   return 1;
@@ -190,23 +194,20 @@ void imgproc_ellipse(struct Image *input_img, struct Image *output_img)
     output_img->data[i] = make_pixel(0, 0, 0, 255);
   }
 
-  int a_diff = width / 2;
-  int b_diff = height / 2;
-
   for (uint32_t row = 0; row < height; row++)
   {
     for (uint32_t col = 0; col < width; col++)
     {
       if (is_in_ellipse(input_img, row, col) == 1)
       {
-        uint32_t pixel = input_img->data[row * width + col];
+        uint32_t pixel = input_img->data[compute_index(input_img, row, col)];
 
         uint32_t r = get_r(pixel);
         uint32_t g = get_g(pixel);
         uint32_t b = get_b(pixel);
         uint32_t a = get_a(pixel);
 
-        output_img->data[row * width + col] = make_pixel(r, g, b, a);
+        output_img->data[compute_index(output_img, row, col)] = make_pixel(r, g, b, a);
       }
     }
   }
