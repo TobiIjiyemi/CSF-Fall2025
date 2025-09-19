@@ -95,6 +95,9 @@ void test_ellipse_basic( TestObjs *objs );
 void test_emboss_basic( TestObjs *objs );
 // TODO: add prototypes for additional test functions
 void test_get_RGBA_functions( TestObjs *objs );
+void test_make_pixel ( TestObjs *objs );
+void test_compute_index ( TestObjs *objs );
+void test_is_ellipse ( TestObjs *objs );
 
 
 int main( int argc, char **argv ) {
@@ -114,6 +117,9 @@ int main( int argc, char **argv ) {
   TEST( test_emboss_basic );
 
   TEST (test_get_RGBA_functions);
+  TEST (test_make_pixel);
+  TEST (test_compute_index );
+  TEST (test_is_ellipse);
 
   TEST_FINI();
 }
@@ -392,4 +398,30 @@ void test_get_RGBA_functions ( TestObjs *objs ) {
   ASSERT (g == expected_g);
   ASSERT (b == expected_b);
   ASSERT (a == expected_a);
+}
+
+void test_make_pixel ( TestObjs *objs ) {
+  uint32_t data = objs->smiley->data[2];
+
+  uint32_t r = get_r(data);
+  uint32_t g = get_g(data);
+  uint32_t b = get_b(data);
+  uint32_t a = get_a(data);
+
+  uint32_t pixel = make_pixel(r, g, b, a);
+  ASSERT (pixel == data);
+}
+
+void test_compute_index ( TestObjs *objs ) {
+struct Image *img = objs->smiley;
+int index = compute_index(img, 2, 3);
+ASSERT (index == 2 * img->width + 3);
+}
+
+void test_is_ellipse ( TestObjs *objs ) {
+
+  struct Image *img = objs->smiley;
+  int row = (img->height / 2) + 1;
+  int col = (img->width / 2) + 1;
+  ASSERT (1 == is_in_ellipse(img, row, col));
 }
