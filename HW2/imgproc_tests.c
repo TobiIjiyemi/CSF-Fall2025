@@ -98,6 +98,9 @@ void test_get_RGBA_functions( TestObjs *objs );
 void test_make_pixel ( TestObjs *objs );
 void test_compute_index ( TestObjs *objs );
 void test_is_ellipse ( TestObjs *objs );
+void test_is_in_ellipse_boundaries(TestObjs *objs);
+void test_get_max (TestObjs *objs);
+void test_get_RGBA_2 (TestObjs *objs);
 
 
 int main( int argc, char **argv ) {
@@ -120,6 +123,10 @@ int main( int argc, char **argv ) {
   TEST (test_make_pixel);
   TEST (test_compute_index );
   TEST (test_is_ellipse);
+  TEST (test_is_in_ellipse_boundaries);
+  TEST (test_get_max );
+  TEST (test_get_RGBA_2);
+
 
   TEST_FINI();
 }
@@ -398,9 +405,23 @@ void test_get_RGBA_functions ( TestObjs *objs ) {
   ASSERT (g == expected_g);
   ASSERT (b == expected_b);
   ASSERT (a == expected_a);
+
+  uint32_t pixel_2 = objs->smiley->data[20];
+  
+  uint32_t expected_r_2 = (pixel_2 >> 24);
+  uint32_t expected_g_2 = (pixel_2 << 8) >> 24;
+  uint32_t expected_b_2 = (pixel_2 << 16) >> 24;
+  uint32_t expected_a_2 = (pixel_2 << 24) >> 24;
+
+  ASSERT (r == expected_r_2);
+  ASSERT (g == expected_g_2);
+  ASSERT (b == expected_b_2);
+  ASSERT (a == expected_a_2);
+
 }
 
-void test_get_RGBA_edge_cases(TestObjs *objs) {
+void test_get_RGBA_2 (TestObjs *objs) {
+
   uint32_t black_pixel = 0x000000FF;
   ASSERT(get_r(black_pixel) == 0);
   ASSERT(get_g(black_pixel) == 0);
