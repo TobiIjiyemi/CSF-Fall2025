@@ -16,24 +16,30 @@
 //! @param output_img pointer to the output Image (in which the
 //!                   transformed pixels should be stored)
 
-uint32_t get_r(uint32_t data) {
+uint32_t get_r(uint32_t data)
+{
   return (data >> 24);
 }
 
-uint32_t get_g(uint32_t data) {
+uint32_t get_g(uint32_t data)
+{
   return (data << 8) >> 24;
 }
 
-uint32_t get_b(uint32_t data) {
+uint32_t get_b(uint32_t data)
+{
   return (data << 16) >> 24;
 }
 
-uint32_t get_a(uint32_t data) {
+uint32_t get_a(uint32_t data)
+{
   return (data << 24) >> 24;
 }
 
-uint32_t make_pixel (uint32_t r, uint32_t g, uint32_t b, uint32_t a) {
+uint32_t make_pixel(uint32_t r, uint32_t g, uint32_t b, uint32_t a)
+{
   uint32_t pixel = 0;
+
   pixel += r;
   pixel = pixel << 8;
 
@@ -47,7 +53,23 @@ uint32_t make_pixel (uint32_t r, uint32_t g, uint32_t b, uint32_t a) {
   return pixel;
 }
 
+int is_in_ellipse(struct Image *img, int32_t row, int32_t col)
+{
+  uint32_t width = img->width;
+  uint32_t height = img->height;
 
+  int a_diff = width / 2;
+  int b_diff = height / 2;
+
+  int dist_x = (col - a_diff);
+  int dist_y = (row - b_diff);
+
+  uint32_t check_x = (int)((10000 * (dist_x * dist_x)) / (a_diff * a_diff));
+  uint32_t check_y = (int)((10000 * (dist_y * dist_y)) / (b_diff * b_diff));
+
+  if (check_x + check_y <= 10000) return 1;
+  else return 0;
+}
 
 //! For all other pixels, we consider the pixel's color component
 //! values r, g, and b, and also the pixel's upper-left neighbor's
@@ -59,27 +81,38 @@ uint32_t make_pixel (uint32_t r, uint32_t g, uint32_t b, uint32_t a) {
 //! difference has the same absolute value, the red difference has
 //! priority over green and blue, and the green difference has priority
 //! over blue.)
-int get_max(int red_d, int blue_d, int green_d) {
-  if (abs(red_d) >= abs(blue_d) && abs(red_d) >= abs(green_d)) {
+int get_max(int red_d, int blue_d, int green_d)
+{
+  if (abs(red_d) >= abs(blue_d) && abs(red_d) >= abs(green_d))
+  {
     return red_d;
   }
-  if (abs(green_d) >= abs(blue_d)) {
+  if (abs(green_d) >= abs(blue_d))
+  {
     return green_d;
   }
   return blue_d;
 }
 
-void imgproc_complement( struct Image *input_img, struct Image *output_img ) {
+void imgproc_complement(struct Image *input_img, struct Image *output_img)
+{
+
   int32_t width = input_img->width;
   int32_t height = input_img->height;
+
   output_img->width = width;
   output_img->height = height;
-  for (int i = 0; i < height; i++) {
-    for (int j = 0; j < width; j++) {
-      uint32_t data = input_img->data[i*width + j];
+
+  for (int i = 0; i < height; i++)
+  {
+    for (int j = 0; j < width; j++)
+    {
+      uint32_t data = input_img->data[i * width + j];
+
       uint32_t inverted_rgb = ~(data >> 8);
+
       uint32_t alphaval = get_a(data);
-      output_img->data[i*width + j] = (inverted_rgb << 8) + (alphaval >> 24);
+      output_img->data[i * width + j] = (inverted_rgb << 8) + (alphaval >> 24);
     }
   }
 }
@@ -98,11 +131,13 @@ void imgproc_complement( struct Image *input_img, struct Image *output_img ) {
 //! @return 1 if the transformation succeeded, or 0 if the
 //!         transformation can't be applied because the image
 //!         width and height are not the same
-int imgproc_transpose( struct Image *input_img, struct Image *output_img ) {
+int imgproc_transpose(struct Image *input_img, struct Image *output_img)
+{
   // TODO: implement
   uint32_t width = input_img->width;
   uint32_t height = input_img->height;
-  if (height != width) {
+  if (height != width)
+  {
     return 0;
   }
 
@@ -110,8 +145,10 @@ int imgproc_transpose( struct Image *input_img, struct Image *output_img ) {
   output_img->height = width;
   output_img->width = height;
 
-  for (int i = 0; i < height; i++) {
-    for (int j = 0; j < width; j++) {
+  for (int i = 0; i < height; i++)
+  {
+    for (int j = 0; j < width; j++)
+    {
       uint32_t data = input_img->data[i * width + j];
       output_img->data[j * height + i] = data;
     }
@@ -138,7 +175,8 @@ int imgproc_transpose( struct Image *input_img, struct Image *output_img ) {
 //! @param input_img pointer to the input Image
 //! @param output_img pointer to the output Image (in which the
 //!                   transformed pixels should be stored)
-void imgproc_ellipse( struct Image *input_img, struct Image *output_img ) {
+void imgproc_ellipse(struct Image *input_img, struct Image *output_img)
+{
   // TODO: implement
 
   uint32_t width = input_img->width;
@@ -147,32 +185,29 @@ void imgproc_ellipse( struct Image *input_img, struct Image *output_img ) {
   output_img->width = width;
   output_img->height = height;
 
-  for (int i = 0; i < width * height; i++) {
+  for (int i = 0; i < width * height; i++)
+  {
     output_img->data[i] = make_pixel(0, 0, 0, 255);
   }
 
-  int a_diff = width/2;
-  int b_diff = height/2;
+  int a_diff = width / 2;
+  int b_diff = height / 2;
 
-  for (uint32_t row = 0; row < height; row++) {
-    for (uint32_t col = 0; col < width; col++) {
-      
-      int dist_x = (col - a_diff);
-      int dist_y = (row - b_diff); 
-
-      uint32_t check_x = (int)((10000 * (dist_x * dist_x)) / (a_diff*a_diff));
-      uint32_t check_y = (int)((10000 * (dist_y * dist_y)) / (b_diff*b_diff));
-
-      if (check_x + check_y <= 10000) {
+  for (uint32_t row = 0; row < height; row++)
+  {
+    for (uint32_t col = 0; col < width; col++)
+    {
+      if (is_in_ellipse(input_img, row, col) == 1)
+      {
         uint32_t pixel = input_img->data[row * width + col];
-        
+
         uint32_t r = get_r(pixel);
         uint32_t g = get_g(pixel);
         uint32_t b = get_b(pixel);
         uint32_t a = get_a(pixel);
-        
+
         output_img->data[row * width + col] = make_pixel(r, g, b, a);
-      } 
+      }
     }
   }
 }
@@ -207,11 +242,12 @@ void imgproc_ellipse( struct Image *input_img, struct Image *output_img ) {
 //! @param input_img pointer to the input Image
 //! @param output_img pointer to the output Image (in which the
 //!                   transformed pixels should be stored)
-void imgproc_emboss( struct Image *input_img, struct Image *output_img ) {
-  //two for loops, loop through top row and further left row.
-  //set all bits to 128 bits. 
-  //input_img->data[j]
-  //input_img->data[i * width] i goes through 0 to however many rows,
+void imgproc_emboss(struct Image *input_img, struct Image *output_img)
+{
+  // two for loops, loop through top row and further left row.
+  // set all bits to 128 bits.
+  // input_img->data[j]
+  // input_img->data[i * width] i goes through 0 to however many rows,
   uint32_t width = input_img->width;
   uint32_t height = input_img->height;
 
@@ -220,18 +256,22 @@ void imgproc_emboss( struct Image *input_img, struct Image *output_img ) {
 
   uint32_t setval = 128;
 
-  for (int j = 0; j < width; j++) {
+  for (int j = 0; j < width; j++)
+  {
     uint32_t alpha_val = (input_img->data[j] << 24) >> 24;
     output_img->data[j] = (setval << 8) + (setval << 16) + (setval << 24) + alpha_val;
   }
 
-  for (int i = 0; i < height; i++) {
+  for (int i = 0; i < height; i++)
+  {
     uint32_t alpha_val = get_a(input_img->data[i * width]);
     output_img->data[i * width] = (setval << 8) + (setval << 16) + (setval << 24) + alpha_val;
   }
-  
-  for (int i = 1; i < height; i++) {
-    for (int j = 1; j < width; j++) {
+
+  for (int i = 1; i < height; i++)
+  {
+    for (int j = 1; j < width; j++)
+    {
       uint32_t alpha_val = get_a(input_img->data[i * width + j]);
       uint32_t current = input_img->data[i * width + j];
       uint32_t upper = input_img->data[(i - 1) * width + (j - 1)];
@@ -240,12 +280,15 @@ void imgproc_emboss( struct Image *input_img, struct Image *output_img ) {
       int blue_diff = (get_b(upper) - get_b(current));
       int diff_max = get_max(red_diff, green_diff, blue_diff);
       int setval = 128 + diff_max;
-      if (setval < 0) {
+      if (setval < 0)
+      {
         setval = 0;
-      } else if (setval > 255) {
+      }
+      else if (setval > 255)
+      {
         setval = 255;
       }
-      uint32_t setval32 = (uint32_t) setval;
+      uint32_t setval32 = (uint32_t)setval;
       output_img->data[i * width + j] = (setval32 << 8) + (setval32 << 16) + (setval32 << 24) + alpha_val;
     }
   }
