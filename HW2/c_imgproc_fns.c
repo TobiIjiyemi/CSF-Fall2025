@@ -273,7 +273,7 @@ void imgproc_emboss(struct Image *input_img, struct Image *output_img)
       int green_diff = ( ((int)get_g(upper)) - ((int)get_g(current)) );
       int blue_diff = ( ((int)get_b(upper)) - ((int)get_b(current)) );
 
-      int diff_max = get_max(red_diff, green_diff, blue_diff);
+      int diff_max = get_max(red_diff, blue_diff, green_diff);
       int setval = 128 + diff_max;
       if (setval < 0)
       {
