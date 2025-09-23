@@ -15,6 +15,44 @@
  * them visible to the test code.
  */
 
+	.globl get_r
+get_r:
+	movl 4(%rsp), %eax /* store the value in 4+rsp from the stack into eax */ 
+	shr 24, %eax
+	ret
+
+	.globl get_g
+get_g:
+	movl 4(%rsp), %eax /* store the value located at rsp+4 in eax*/ 
+	shl 8, %eax
+	shr 24, *eax
+	ret
+
+	.globl get_b
+get_b: 
+	movl 4(%rsp), %eax
+	shl 16, %eax
+	shr 24, %eax
+	ret
+
+	.globl get_a
+get_a:
+	movl 4(%rsp), %eax
+	shl 24, %eax
+	shr 24, %eax
+	ret
+
+	.globl make_pixel
+make_pixel:
+	movl $0, %eax /* Equivalent of setting pixel equal to 0 */
+
+	addl 4(%rsp), %eax
+	shl 8, %eax
+
+	
+
+
+
 /*
  * Definitions of image transformation functions
  */
