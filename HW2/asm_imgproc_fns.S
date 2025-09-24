@@ -48,7 +48,7 @@ make_pixel:
 	addl 4(%rsp), %eax
 	shl 8, %eax
 
-	
+
 
 
 
@@ -124,12 +124,14 @@ imgproc_complement:
 imgproc_transpose:
 	/* TODO: implement */
 
-	movl IMAGE_WIDTH_OFFSET(%rdi), %r12 /* store the width of rdi in eax */
-	movl IMAGE_HEIGHT_OFFSET(%rdi), %r13 /* store the height of rdi into 8? */
+	movl IMAGE_WIDTH_OFFSET(%rdi), %r12 /* store the width of image in %r12 */
+	movl IMAGE_HEIGHT_OFFSET(%rdi), %r13 /* store the height of rdi into %r13 */
 
-	cmp %r12, %r13
-	jne .not_Square
-	je .is_square
+	cmp %r12, %r13	/* Comparing width and height to ensure square image */
+	
+	jne .not_Square /* If width and height are not equal, then jump to the label not_square  */
+	
+	je .is_square.  /* If width and height are equal, then jump to the label is_square  */
 
 	.not_square: 
 	movq $0, %eax
