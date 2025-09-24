@@ -45,11 +45,10 @@ get_a:
 	.globl make_pixel
 make_pixel:
 	movl $0, %eax /* Equivalent of setting pixel equal to 0 */
-
 	addl 4(%rsp), %eax
 	shl 8, %eax
 
-
+	
 
 
 
@@ -71,7 +70,37 @@ make_pixel:
  */
 	.globl imgproc_complement
 imgproc_complement:
-	/* TODO: implement */
+	subq $8, %rsp
+
+	/*move the rdi pointer to eax, to be accessed and manipulated*/
+	movl %rdi, %eax
+
+	/*move rdi pointer to rbx, */
+	movl %rdi, %rbx
+
+	/*right shift to keep only rgbs */
+	shr 8, %rbx
+
+	/*flip the color componoent values of rbx*/
+	NOT %rbx
+
+	/* bring the color component back into it's proper spot
+	*  fill the alpha spot with 0's 
+	*/
+	shl 8, %rbx
+
+	/*mask lower alpha bits and add to rbx... use result and put it in 
+	* rsi
+	*/
+	/* AND */
+
+	/* missing code in the middle, still in implementation phase*/
+	
+	/* sorta like a recursive function call */
+	jl .imgproc_complement
+
+	/* still to implement */
+	addq $8, %rsp
 	ret
 
 /*
