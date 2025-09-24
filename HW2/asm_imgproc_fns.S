@@ -45,11 +45,8 @@ get_a:
 	.globl make_pixel
 make_pixel:
 	movl $0, %eax /* Equivalent of setting pixel equal to 0 */
-
 	addl 4(%rsp), %eax
 	shl 8, %eax
-
-	
 
 
 
@@ -71,7 +68,9 @@ make_pixel:
  */
 	.globl imgproc_complement
 imgproc_complement:
-	/* TODO: implement */
+	subq $8, %rsp
+	/* still to implement */
+	addq $8, %rsp
 	ret
 
 /*
