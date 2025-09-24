@@ -90,9 +90,11 @@ imgproc_complement:
 	/*mask lower alpha bits and add to rbx... use result and put it in 
 	* rsi
 	*/
-	AND 
+	/* AND */
 
+	/* missing code in the middle, still in implementation phase*/
 	
+	/* sorta like a recursive function call */
 	jl .imgproc_complement
 
 	/* still to implement */
