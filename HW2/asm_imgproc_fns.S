@@ -49,7 +49,7 @@ make_pixel:
 	addl 4(%rsp), %eax
 	shl 8, %eax
 
-	
+
 
 
 
@@ -94,6 +94,21 @@ imgproc_complement:
 	.globl imgproc_transpose
 imgproc_transpose:
 	/* TODO: implement */
+
+	movl IMAGE_WIDTH_OFFSET(%rdi), %r12 /* store the width of rdi in eax */
+	movl IMAGE_HEIGHT_OFFSET(%rdi), %r13 /* store the height of rdi into 8? */
+
+	cmp %r12, %r13
+	jne .not_Square
+	je .is_square
+
+	.not_square: 
+	movq $0, %eax
+
+	.is_square:
+	movq $1, %eax
+
+	
 	ret
 
 /*
