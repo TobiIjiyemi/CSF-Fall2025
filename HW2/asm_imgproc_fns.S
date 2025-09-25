@@ -15,42 +15,6 @@
  * them visible to the test code.
  */
 
-	.globl get_r
-get_r:
-	movl 4(%rsp), %eax /* store the value in 4+rsp from the stack into eax */ 
-	shr 24, %eax
-	ret
-
-	.globl get_g
-get_g:
-	movl 4(%rsp), %eax /* store the value located at rsp+4 in eax*/ 
-	shl 8, %eax
-	shr 24, *eax
-	ret
-
-	.globl get_b
-get_b: 
-	movl 4(%rsp), %eax
-	shl 16, %eax
-	shr 24, %eax
-	ret
-
-	.globl get_a
-get_a:
-	movl 4(%rsp), %eax
-	shl 24, %eax
-	shr 24, %eax
-	ret
-
-	.globl make_pixel
-make_pixel:
-	movl $0, %eax /* Equivalent of setting pixel equal to 0 */
-	addl 4(%rsp), %eax
-	shl 8, %eax
-
-
-
-
 
 /*
  * Definitions of image transformation functions
@@ -72,27 +36,27 @@ make_pixel:
 imgproc_complement:
 	subq $8, %rsp
 
-	movl IMAGE_WIDTH_OFFSET(%rdi), %r12 /* store the width of image in %r12 */
-	movl IMAGE_HEIGHT_OFFSET(%rdi), %r13 /* store the height of rdi into %r13 */
+	movq IMAGE_WIDTH_OFFSET(%rdi), %r12 /* store the width of image in %r12 */
+	movq IMAGE_HEIGHT_OFFSET(%rdi), %r13 /* store the height of rdi into %r13 */
 
-	movl %r12, IMAGE_WIDTH_OFFSET(%rsi) /* store new width of image in address at %rsi*/
-	movl %r13, IMAGE_HEIGHT_OFFSET(%rsi) /* store new height of image at address %rsi + 4*/
+	movq %r12, IMAGE_WIDTH_OFFSET(%rsi) /* store new width of image in address at %rsi*/
+	movq %r13, IMAGE_HEIGHT_OFFSET(%rsi) /* store new height of image at address %rsi + 4*/
 
 	/*reserve %eax register for multiplication of height and width*/
 	movl $1, %eax
-	mull %r12
-	mull %r13
+	imull %r12
+	imull %r13
 
 	/*eax should now contain product of widht and height 
 	* we can use to compare and keep track of when image is finished
 	*/
 	
 	/* initialize index to 0*/
-	movl $0, %ebp
+	movq $0, %ebp
 
 	/* compare value in ebp and value in eax, see if index is within image range*/
 	cmp %eax %ebp
-	movl IMAGE_DATA_OFFSET(%rdi, %ebp, 4), %ebx
+	movq IMAGE_DATA_OFFSET(%rdi, %ebp, 4), %ebx
 	jl .perform_complement
 
 	/* missing code in the middle, still in implementation phase*/
@@ -105,14 +69,14 @@ imgproc_complement:
 	ret
 
 .perform_complement
-	movl %ebx, %ecx
+	movq %ebx, %ecx
 	AND %ebx, 0xFFFFFF00
 	NOT %ebx
 	AND %ebx, 0xFFFFFF00
 	AND %ecx, 0xFF
 	OR %ecx, %ebx
-	movl %ebx, IMAGE_DATA_OFFSET(%rsi, %ebp, 4)
-	addl $1, %ebp
+	movq %ebx, IMAGE_DATA_OFFSET(%rsi, %ebp, 4)
+	addq $1, %ebp
 	call imgproc_complement
 
 /*
@@ -136,48 +100,57 @@ imgproc_complement:
 imgproc_transpose:
 	/* TODO: implement */
 
-	movl IMAGE_WIDTH_OFFSET(%rdi), %r12 /* store the width of image in %r12 */
-	movl IMAGE_HEIGHT_OFFSET(%rdi), %r13 /* store the height of rdi into %r13 */
+	movl IMAGE_WIDTH_OFFSET(%rdi), %r12d /* store the width of image in %r12 */
+	movl IMAGE_HEIGHT_OFFSET(%rdi), %r13d /* store the height of rdi into %r13 */
 
-	cmpl %r12, %r13	/* Comparing width and height to ensure square image */
+	cmpl %r12d, %r13d	/* Comparing width and height to ensure square image */
 	
 	jne .not_Square /* If width and height are not equal, then jump to the label not_square  */
 
-	movl %r12, IMAGE_WIDTH_OFFSET(%rsi) /* Load the width into the output image */
-	movl %r13, IMAGE_HEIGHT_OFFSET(%rsi) /* Load the height into the output image */
+	movl %r12d, IMAGE_WIDTH_OFFSET(%rsi) /* Load the width into the output image */
+	movl %r13d, IMAGE_HEIGHT_OFFSET(%rsi) /* Load the height into the output image */
 
-	mov $0, %eax /* counter for outer loop */
-	
+	movq IMAGE_DATA_OFFSET(%rdi), %r14 /* input_img->data */
+	movq IMAGE_DATA_OFFSET(%rsi), %r15 /* output_img->data */
+
+	movq $0, %eax /* i = 0 counter for outer loop */	
 
 	.outer_loop_start:
-	cmp %eax, %r13 /* comparing i to height, i < height */
+	cmpl %r13d, %eax /* comparing i to height, i < height */
 	jge .outer_loop_end /* if i >= height, then end loop */
 
 
 	mov $0, %ecx /* count for inner loop */
+	
 	.inner_loop_start:
-	cmp %ecx, %r12 /* comparing j to width, j < width */
+	cmp %r12d, %ecx /* comparing j to width, j < width */
 	jge .inner_loop_end /* if j >= width, then end inner loop */
 
+	movl %eax, %ebx /* store i in %ebx */
+	imull %r12d, %ebx /* i times width */
+	addl %ecx, %ebx /* i * width + j */
 
-	incl %ecx /* j++ */
+	movl (%r14, %rbx, 4), %edx
+
+	movl %ecx, %ebx /* store j in ebx */
+	imull %r13d, %ebx /* j times width */
+	addl %eax, %ebx /* j * width + i */
+
+	movl %edx, (%r15, %rbx, 4)
+
+	incq %ecx /* j++ */
 	jmp .inner_loop_start 
 	.inner_loop_end:
 
 	incl %eax /* i++ */
 	jmp .outer_loop_start /* return to outer loop i < height times */
+	
 	.outer_loop_end:
-
-
-	cmp
-
-
-
-
+	movl $1, %eax
+	ret
 
 	.not_square: 
-	movq $0, %eax
-
+	movl $0, %eax
 	ret
 
 /*
