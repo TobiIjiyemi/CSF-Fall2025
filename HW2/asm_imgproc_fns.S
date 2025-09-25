@@ -87,27 +87,13 @@ imgproc_complement:
 	* we can use to compare and keep track of when image is finished
 	*/
 	
-	/*move the rdi pointer to eax, to be accessed and manipulated*/
-	movl %rdi, %eax
+	/* initialize index to 0*/
+	movl $0, %ebp
 
-	/*move rdi pointer to rbx, */
-	movl %rdi, %rbx
-
-	/*right shift to keep only rgbs */
-	shr 8, %rbx
-
-	/*flip the color componoent values of rbx*/
-	NOT %rbx
-
-	/* bring the color component back into it's proper spot
-	*  fill the alpha spot with 0's 
-	*/
-	shl 8, %rbx
-
-	/*mask lower alpha bits and add to rbx... use result and put it in 
-	* rsi
-	*/
-	/* AND */
+	/* compare value in ebp and value in eax, see if index is within image range*/
+	cmp %eax %ebp
+	movl IMAGE_DATA_OFFSET(%rdi, %ebp, 4), %ebx
+	jl .perform_complement
 
 	/* missing code in the middle, still in implementation phase*/
 	
@@ -117,6 +103,17 @@ imgproc_complement:
 	/* still to implement */
 	addq $8, %rsp
 	ret
+
+.perform_complement
+	movl %ebx, %ecx
+	AND %ebx, 0xFFFFFF00
+	NOT %ebx
+	AND %ebx, 0xFFFFFF00
+	AND %ecx, 0xFF
+	OR %ecx, %ebx
+	movl %ebx, IMAGE_DATA_OFFSET(%rsi, %ebp, 4)
+	addl $1, %ebp
+	call imgproc_complement
 
 /*
  *  Transform the input image by swapping the row and column
