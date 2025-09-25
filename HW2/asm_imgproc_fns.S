@@ -72,6 +72,21 @@ make_pixel:
 imgproc_complement:
 	subq $8, %rsp
 
+	movl IMAGE_WIDTH_OFFSET(%rdi), %r12 /* store the width of image in %r12 */
+	movl IMAGE_HEIGHT_OFFSET(%rdi), %r13 /* store the height of rdi into %r13 */
+
+	movl %r12, IMAGE_WIDTH_OFFSET(%rsi) /* store new width of image in address at %rsi*/
+	movl %r13, IMAGE_HEIGHT_OFFSET(%rsi) /* store new height of image at address %rsi + 4*/
+
+	/*reserve %eax register for multiplication of height and width*/
+	movl $1, %eax
+	mull %r12
+	mull %r13
+
+	/*eax should now contain product of widht and height 
+	* we can use to compare and keep track of when image is finished
+	*/
+	
 	/*move the rdi pointer to eax, to be accessed and manipulated*/
 	movl %rdi, %eax
 
@@ -139,7 +154,6 @@ imgproc_transpose:
 	.is_square:
 	movq $1, %eax
 
-	
 	ret
 
 /*
