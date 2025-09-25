@@ -139,17 +139,44 @@ imgproc_transpose:
 	movl IMAGE_WIDTH_OFFSET(%rdi), %r12 /* store the width of image in %r12 */
 	movl IMAGE_HEIGHT_OFFSET(%rdi), %r13 /* store the height of rdi into %r13 */
 
-	cmp %r12, %r13	/* Comparing width and height to ensure square image */
+	cmpl %r12, %r13	/* Comparing width and height to ensure square image */
 	
 	jne .not_Square /* If width and height are not equal, then jump to the label not_square  */
+
+	movl %r12, IMAGE_WIDTH_OFFSET(%rsi) /* Load the width into the output image */
+	movl %r13, IMAGE_HEIGHT_OFFSET(%rsi) /* Load the height into the output image */
+
+	mov $0, %eax /* counter for outer loop */
 	
-	je .is_square.  /* If width and height are equal, then jump to the label is_square  */
+
+	.outer_loop_start:
+	cmp %eax, %r13 /* comparing i to height, i < height */
+	jge .outer_loop_end /* if i >= height, then end loop */
+
+
+	mov $0, %ecx /* count for inner loop */
+	.inner_loop_start:
+	cmp %ecx, %r12 /* comparing j to width, j < width */
+	jge .inner_loop_end /* if j >= width, then end inner loop */
+
+
+	incl %ecx /* j++ */
+	jmp .inner_loop_start 
+	.inner_loop_end:
+
+	incl %eax /* i++ */
+	jmp .outer_loop_start /* return to outer loop i < height times */
+	.outer_loop_end:
+
+
+	cmp
+
+
+
+
 
 	.not_square: 
 	movq $0, %eax
-
-	.is_square:
-	movq $1, %eax
 
 	ret
 
