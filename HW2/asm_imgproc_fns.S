@@ -34,6 +34,50 @@
  */
 	.globl imgproc_complement
 imgproc_complement:
+subq $8, %rsp
+
+	movq IMAGE_WIDTH_OFFSET(%rdi), %r12 /* store the width of image in %r12 */
+	movq IMAGE_HEIGHT_OFFSET(%rdi), %r13 /* store the height of rdi into %r13 */
+
+	movq %r12, IMAGE_WIDTH_OFFSET(%rsi) /* store new width of image in address at %rsi*/
+	movq %r13, IMAGE_HEIGHT_OFFSET(%rsi) /* store new height of image at address %rsi + 4*/
+
+	/*reserve %eax register for multiplication of height and width*/
+	movl $1, %eax
+	imull %r12
+	imull %r13
+
+	/*eax should now contain product of widht and height 
+	* we can use to compare and keep track of when image is finished
+	*/
+
+	/* initialize index to 0*/
+	movq $0, %ebp
+
+	/* compare value in ebp and value in eax, see if index is within image range*/
+	cmp %eax %ebp
+	movq IMAGE_DATA_OFFSET(%rdi, %ebp, 4), %ebx
+	jl .perform_complement
+
+	/* missing code in the middle, still in implementation phase*/
+
+	/* sorta like a recursive function call */
+	jl .imgproc_complement
+
+	/* still to implement */
+	addq $8, %rsp
+	ret
+
+.perform_complement
+	movq %ebx, %ecx
+	AND %ebx, 0xFFFFFF00
+	NOT %ebx
+	AND %ebx, 0xFFFFFF00
+	AND %ecx, 0xFF
+	OR %ecx, %ebx
+	movq %ebx, IMAGE_DATA_OFFSET(%rsi, %ebp, 4)
+	addq $1, %ebp
+	call imgproc_complement
 
 
 
