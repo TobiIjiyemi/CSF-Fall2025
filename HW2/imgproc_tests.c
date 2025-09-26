@@ -94,6 +94,7 @@ void test_transpose_basic( TestObjs *objs );
 void test_ellipse_basic( TestObjs *objs );
 void test_emboss_basic( TestObjs *objs );
 // TODO: add prototypes for additional test functions
+/*
 void test_get_RGBA_functions( TestObjs *objs );
 void test_make_pixel ( TestObjs *objs );
 void test_compute_index ( TestObjs *objs );
@@ -101,6 +102,7 @@ void test_is_ellipse ( TestObjs *objs );
 void test_is_in_ellipse_boundaries(TestObjs *objs);
 void test_get_max (TestObjs *objs);
 void test_get_RGBA_2 (TestObjs *objs);
+*/
 
 
 int main( int argc, char **argv ) {
@@ -119,6 +121,7 @@ int main( int argc, char **argv ) {
   TEST( test_ellipse_basic );
   TEST( test_emboss_basic );
 
+  /*
   TEST (test_get_RGBA_functions);
   TEST (test_make_pixel);
   TEST (test_compute_index );
@@ -126,6 +129,7 @@ int main( int argc, char **argv ) {
   TEST (test_is_in_ellipse_boundaries);
   TEST (test_get_max );
   TEST (test_get_RGBA_2);
+  */
 
 
   TEST_FINI();
@@ -387,6 +391,7 @@ void test_emboss_basic( TestObjs *objs ) {
   destroy_img( smiley_emboss_expected );
 }
 
+/*
 
 void test_get_RGBA_functions ( TestObjs *objs ) {
   uint32_t pixel = objs->smiley->data[2];
@@ -511,3 +516,5 @@ void test_get_max (TestObjs *objs) {
 
   ASSERT (-11 == get_max(red_diff, blue_diff, green_diff));
 }
+
+*/

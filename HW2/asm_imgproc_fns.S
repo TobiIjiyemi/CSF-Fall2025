@@ -106,7 +106,7 @@ imgproc_transpose:
 
 	cmpl %r8d, %r9d	/* Comparing width and height to ensure square image */
 	
-	jne .not_Square /* If width and height are not equal, then jump to the label not_square  */
+	jne .not_square /* If width and height are not equal, then jump to the label not_square  */
 
 	movl %r8d, IMAGE_WIDTH_OFFSET(%rsi) /* Load the width into the output image */
 	movl %r8d, IMAGE_HEIGHT_OFFSET(%rsi) /* Load the height into the output image */
@@ -129,13 +129,13 @@ imgproc_transpose:
 
 	movl %eax, %edx /* store i in %edx */
 	imull %r8d, %edx /* i times width */
-	addl %ecx, %rdx /* i * width + j */
+	addl %ecx, %edx /* i * width + j */
 
 	movl (%r10, %rdx, 4), %esi
 
 	movl %ecx, %edx /* store j in %edx */
 	imull %r9d, %edx /* j times width */
-	addl %eax, %rdx /* j * width + i */
+	addl %eax, %edx /* j * width + i */
 
 	movl %esi, (%r11, %rdx, 4)
 
