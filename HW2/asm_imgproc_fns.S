@@ -79,6 +79,7 @@ imgproc_complement:
 	addq $1, %ebp
 	call imgproc_complement
 
+
 /*
  *  Transform the input image by swapping the row and column
  *  of each source pixel when copying it to the output image.
@@ -100,57 +101,57 @@ imgproc_complement:
 imgproc_transpose:
 	/* TODO: implement */
 
-	movl IMAGE_WIDTH_OFFSET(%rdi), %r12d /* store the width of image in %r12 */
-	movl IMAGE_HEIGHT_OFFSET(%rdi), %r13d /* store the height of rdi into %r13 */
+	movl IMAGE_WIDTH_OFFSET(%rdi), %r8d /* store the width of image in %r8 */
+	movl IMAGE_HEIGHT_OFFSET(%rdi), %r9d /* store the height of rdi into %r9 */
 
-	cmpl %r12d, %r13d	/* Comparing width and height to ensure square image */
+	cmpl %r8d, %r9d	/* Comparing width and height to ensure square image */
 	
 	jne .not_Square /* If width and height are not equal, then jump to the label not_square  */
 
-	movl %r12d, IMAGE_WIDTH_OFFSET(%rsi) /* Load the width into the output image */
-	movl %r13d, IMAGE_HEIGHT_OFFSET(%rsi) /* Load the height into the output image */
+	movl %r8d, IMAGE_WIDTH_OFFSET(%rsi) /* Load the width into the output image */
+	movl %r8d, IMAGE_HEIGHT_OFFSET(%rsi) /* Load the height into the output image */
 
-	movq IMAGE_DATA_OFFSET(%rdi), %r14 /* input_img->data */
-	movq IMAGE_DATA_OFFSET(%rsi), %r15 /* output_img->data */
+	movq IMAGE_DATA_OFFSET(%rdi), %r10 /* input_img->data */
+	movq IMAGE_DATA_OFFSET(%rsi), %r11 /* output_img->data */
 
-	movq $0, %eax /* i = 0 counter for outer loop */	
+	xorl %eax, %eax /* i = 0 counter for outer loop */	
 
 	.outer_loop_start:
-	cmpl %r13d, %eax /* comparing i to height, i < height */
+	cmpl %r9d, %eax /* comparing i to height, i < height */
 	jge .outer_loop_end /* if i >= height, then end loop */
 
 
-	mov $0, %ecx /* count for inner loop */
+	xorl %ecx, %ecx /* count for inner loop */
 	
 	.inner_loop_start:
-	cmp %r12d, %ecx /* comparing j to width, j < width */
+	cmp %r8d, %ecx /* comparing j to width, j < width */
 	jge .inner_loop_end /* if j >= width, then end inner loop */
 
-	movl %eax, %ebx /* store i in %ebx */
-	imull %r12d, %ebx /* i times width */
-	addl %ecx, %ebx /* i * width + j */
+	movl %eax, %edx /* store i in %edx */
+	imull %r8d, %edx /* i times width */
+	addl %ecx, %rdx /* i * width + j */
 
-	movl (%r14, %rbx, 4), %edx
+	movl (%r10, %rdx, 4), %esi
 
-	movl %ecx, %ebx /* store j in ebx */
-	imull %r13d, %ebx /* j times width */
-	addl %eax, %ebx /* j * width + i */
+	movl %ecx, %edx /* store j in %edx */
+	imull %r9d, %edx /* j times width */
+	addl %eax, %rdx /* j * width + i */
 
-	movl %edx, (%r15, %rbx, 4)
+	movl %esi, (%r11, %rdx, 4)
 
-	incq %ecx /* j++ */
+	incl %ecx /* j++ */
 	jmp .inner_loop_start 
+	
 	.inner_loop_end:
-
 	incl %eax /* i++ */
 	jmp .outer_loop_start /* return to outer loop i < height times */
 	
 	.outer_loop_end:
-	movl $1, %eax
+	movl $1, %eax /* transpose success */
 	ret
 
 	.not_square: 
-	movl $0, %eax
+	movl $0, %eax /* transpose fail */
 	ret
 
 /*
