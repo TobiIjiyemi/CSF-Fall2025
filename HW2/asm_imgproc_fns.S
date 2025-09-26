@@ -34,51 +34,49 @@
  */
 	.globl imgproc_complement
 imgproc_complement:
-subq $8, %rsp
+	/* subq $8, %rsp */
 
-	movq IMAGE_WIDTH_OFFSET(%rdi), %r12 /* store the width of image in %r12 */
-	movq IMAGE_HEIGHT_OFFSET(%rdi), %r13 /* store the height of rdi into %r13 */
+	movl IMAGE_WIDTH_OFFSET(%rdi), %r8d /* store the width of image in %r12 */
+	movl IMAGE_HEIGHT_OFFSET(%rdi), %r9d /* store the height of rdi into %r13 */
 
-	movq %r12, IMAGE_WIDTH_OFFSET(%rsi) /* store new width of image in address at %rsi*/
-	movq %r13, IMAGE_HEIGHT_OFFSET(%rsi) /* store new height of image at address %rsi + 4*/
+	movl %r8d, IMAGE_WIDTH_OFFSET(%rsi) /* store new width of image in address at %rsi*/
+	movl %r9d, IMAGE_HEIGHT_OFFSET(%rsi) /* store new height of image at address %rsi + 4*/
 
 	/*reserve %eax register for multiplication of height and width*/
 	movl $1, %eax
-	imull %r12
-	imull %r13
+	imull %r8d
+	imull %r9d
 
 	/*eax should now contain product of widht and height 
 	* we can use to compare and keep track of when image is finished
 	*/
 
 	/* initialize index to 0*/
-	movq $0, %ebp
+	movq $0, %rdx
+	movl $0, %ebp
 
 	/* compare value in ebp and value in eax, see if index is within image range*/
-	cmp %eax %ebp
-	movq IMAGE_DATA_OFFSET(%rdi, %ebp, 4), %ebx
+	movl IMAGE_DATA_OFFSET(%rdi, %rdx, 4), %ebx
 	jl .perform_complement
 
-	/* missing code in the middle, still in implementation phase*/
+	.perform_complement:
+	jge .complement_end
+	movl %ebx, %ecx
+	AND $0xFFFFFF00, %ebx
+	NOT %ebx
+	AND  $0xFFFFFF00, %ebx
+	AND $0xFF, %ecx
+	OR %ecx, %ebx 
+	movl %ebx, IMAGE_DATA_OFFSET(%rsi, %rdx, 4)
+	addl $1, %ebp
+	addq $1, %rdx
+	cmp %eax, %ebp
+	jmp .perform_complement
 
-	/* sorta like a recursive function call */
-	jl .imgproc_complement
-
-	/* still to implement */
-	addq $8, %rsp
+	.complement_end:
 	ret
 
-.perform_complement
-	movq %ebx, %ecx
-	AND %ebx, 0xFFFFFF00
-	NOT %ebx
-	AND %ebx, 0xFFFFFF00
-	AND %ecx, 0xFF
-	OR %ecx, %ebx
-	movq %ebx, IMAGE_DATA_OFFSET(%rsi, %ebp, 4)
-	addq $1, %ebp
-	call imgproc_complement
-
+	
 
 
 /*
