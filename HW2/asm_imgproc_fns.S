@@ -34,48 +34,44 @@
  */
 	.globl imgproc_complement
 imgproc_complement:
-	/* subq $8, %rsp */
-
+	pushq %rbx
 	movl IMAGE_WIDTH_OFFSET(%rdi), %r8d /* store the width of image in %r12 */
 	movl IMAGE_HEIGHT_OFFSET(%rdi), %r9d /* store the height of rdi into %r13 */
 
 	movl %r8d, IMAGE_WIDTH_OFFSET(%rsi) /* store new width of image in address at %rsi*/
 	movl %r9d, IMAGE_HEIGHT_OFFSET(%rsi) /* store new height of image at address %rsi + 4*/
 
-	/*reserve %eax register for multiplication of height and width*/
-	movl $1, %eax
-	imull %r8d
+	/* reserve %eax register for multiplication of height and width*/
+	movl %r8d, %eax
 	imull %r9d
 
-	/*eax should now contain product of widht and height 
-	* we can use to compare and keep track of when image is finished
-	*/
+	/* initializing counter index to 0*/
+	xorq %rdx, %rdx
 
-	/* initialize index to 0*/
-	movq $0, %rdx
-	movl $0, %ebp
+.perform_complement_start:
+	/* compare value in rdx and rax (contains eax value storing width*heigth), see if index is within image range*/
+	cmpq %rax, %rdx
+	jge .perform_complement_end
 
-	/* compare value in ebp and value in eax, see if index is within image range*/
+	/*access pixel[i]*/
 	movl IMAGE_DATA_OFFSET(%rdi, %rdx, 4), %ebx
-	jl .perform_complement
 
-	.perform_complement:
-	jge .complement_end
-	movl %ebx, %ecx
-	AND $0xFFFFFF00, %ebx
-	NOT %ebx
-	AND  $0xFFFFFF00, %ebx
-	AND $0xFF, %ecx
-	OR %ecx, %ebx 
+	/* inverts all 32 bits */
+	notl %ebx
+
+	/* flips just the alpha bits */ 
+	xorl $0x000000FF, %ebx
+
+	/* put ebx into it's associated location in pixel[i]*/ 
 	movl %ebx, IMAGE_DATA_OFFSET(%rsi, %rdx, 4)
-	addl $1, %ebp
+
+	/* update loop counter and jump back*/
 	addq $1, %rdx
-	cmp %eax, %ebp
-	jmp .perform_complement
+	jmp .perform_complement_start
 
-	.complement_end:
+.perform_complement_end:
+	popq %rbx
 	ret
-
 	
 
 
