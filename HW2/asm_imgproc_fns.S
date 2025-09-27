@@ -130,13 +130,13 @@ imgproc_transpose:
 	imull %r8d, %edx /* i times width */
 	addl %ecx, %edx /* i * width + j */
 
-	movl (%r10, %rdx, 4), %esi
+	movl (%r10, %rdx, 4), %esi /* set esi equal to input->data[i * width + j] */
 
 	movl %ecx, %edx /* store j in %edx */
 	imull %r9d, %edx /* j times width */
 	addl %eax, %edx /* j * width + i */
 
-	movl %esi, (%r11, %rdx, 4)
+	movl %esi, (%r11, %rdx, 4) /* move esi which stores input data into output->data[j * width + i] */
 
 	incl %ecx /* j++ */
 	jmp .inner_loop_start 
