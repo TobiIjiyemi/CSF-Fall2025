@@ -35,6 +35,8 @@
 	.globl imgproc_complement
 imgproc_complement:
 	pushq %rbx
+	pushq %r10
+	pushq %r11
 	movl IMAGE_WIDTH_OFFSET(%rdi), %r8d /* store the width of image in %r12 */
 	movl IMAGE_HEIGHT_OFFSET(%rdi), %r9d /* store the height of rdi into %r13 */
 
@@ -45,6 +47,9 @@ imgproc_complement:
 	movl %r8d, %eax
 	imull %r9d
 
+	movq IMAGE_DATA_OFFSET(%rdi), %r10
+	movq IMAGE_DATA_OFFSET(%rsi), %r11
+
 	/* initializing counter index to 0*/
 	xorq %rdx, %rdx
 
@@ -54,7 +59,7 @@ imgproc_complement:
 	jge .perform_complement_end
 
 	/*access pixel[i]*/
-	movl IMAGE_DATA_OFFSET(%rdi, %rdx, 4), %ebx
+	movl (%r10, %rdx, 4), %ebx
 
 	/* inverts all 32 bits */
 	notl %ebx
@@ -63,7 +68,7 @@ imgproc_complement:
 	xorl $0x000000FF, %ebx
 
 	/* put ebx into it's associated location in pixel[i]*/ 
-	movl %ebx, IMAGE_DATA_OFFSET(%rsi, %rdx, 4)
+	movl %ebx, (%r11, %rdx, 4)
 
 	/* update loop counter and jump back*/
 	addq $1, %rdx
@@ -71,6 +76,8 @@ imgproc_complement:
 
 .perform_complement_end:
 	popq %rbx
+	popq %r11
+	popq %r10
 	ret
 	
 
