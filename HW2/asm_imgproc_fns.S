@@ -34,6 +34,7 @@
  */
 	.globl imgproc_complement
 imgproc_complement:
+	/* using the callee saved registers rbx, r10, and r11*/
 	pushq %rbx
 	pushq %r10
 	pushq %r11
@@ -47,7 +48,10 @@ imgproc_complement:
 	movl %r8d, %eax
 	imull %r9d
 
+	/*storing the data pointer of input image in r10 */
 	movq IMAGE_DATA_OFFSET(%rdi), %r10
+
+	/*storing the data pointer of output image in r11*/
 	movq IMAGE_DATA_OFFSET(%rsi), %r11
 
 	/* initializing counter index to 0*/
@@ -56,9 +60,11 @@ imgproc_complement:
 .perform_complement_start:
 	/* compare value in rdx and rax (contains eax value storing width*heigth), see if index is within image range*/
 	cmpq %rax, %rdx
+
+	/*jump to the end of the loop if rdx is greater than or equal to rax, if index is greater than or equal to height * width*/
 	jge .perform_complement_end
 
-	/*access pixel[i]*/
+	/*access pixel[i] using the base, index, and scale operation and put it in ebx*/
 	movl (%r10, %rdx, 4), %ebx
 
 	/* inverts all 32 bits */
@@ -72,9 +78,11 @@ imgproc_complement:
 
 	/* update loop counter and jump back*/
 	addq $1, %rdx
+	/*jump back up to start of the loop*/
 	jmp .perform_complement_start
 
 .perform_complement_end:
+	/*realign the stack by popping the callee saved registers we pushed onto there*/
 	popq %rbx
 	popq %r11
 	popq %r10

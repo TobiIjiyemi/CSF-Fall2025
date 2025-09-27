@@ -91,8 +91,8 @@ void destroy_img( struct Image *img );
 // Test functions
 void test_complement_basic( TestObjs *objs );
 void test_transpose_basic( TestObjs *objs );
-void test_ellipse_basic( TestObjs *objs );
-void test_emboss_basic( TestObjs *objs );
+// void test_ellipse_basic( TestObjs *objs );
+// void test_emboss_basic( TestObjs *objs );
 // TODO: add prototypes for additional test functions
 /*
 void test_get_RGBA_functions( TestObjs *objs );
