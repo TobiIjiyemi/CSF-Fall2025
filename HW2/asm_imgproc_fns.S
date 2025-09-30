@@ -15,6 +15,40 @@
  * them visible to the test code.
  */
 
+	.globl is_in_elipse
+is_in_elipse:
+
+	movl %edx, %r8d /* set r8d = width */
+	shrl $1, %r8d /* a_diff = width/2 */
+
+	movl %ecx, %r9d /* set r9d = height */
+	shrl $1, %r9d /* b_diff = height/2 */
+
+	subl %r8d, %edi /* row minus width/2 so store in edi, dist_x = row - a_diff */
+	subl %r9d, %esi /* col minust height/2 so store in esi dist_y = col - b_diff */
+
+	
+	imull %edi, %edi /* dist_x * dist_x stored in edi */
+	imull $10000, %edi /* 10000 * edi */
+	imull %r8d, %r8d /* a_diff * a_diff */
+	movl %edi, %eax
+	xorl %edx, %edx /* clear upper bits */
+	idivl %r8d /* check_x = (10000 * (dist_x * dist_x)) / (a_diff * a_diff); */
+	movl %eax, %r12d
+
+	imull %esi, %esi /* dist_y * dist_y stored in esi */
+	imull $10000, %esi /* 10000 * esi */
+	imull %r9d, %r9d /* b_diff * b_diff */
+	movl %esi, %eax
+	xorl %edx, %edx /* clear upper bits */
+	idivl %r9d /* check_y = (10000 * (dist_y * dist_y)) / (b_diff * b_diff); */
+	movl %eax, %r13d
+
+	addl %r12d, %r13d
+	cmpl $10000, %r13d
+	jle .inside_ellipse
+	ret
+
 
 /*
  * Definitions of image transformation functions
@@ -189,6 +223,36 @@ imgproc_transpose:
 	.globl imgproc_ellipse
 imgproc_ellipse:
 	/* TODO: implement */
+	
+	movl IMAGE_WIDTH_OFFSET(%rdi), %r8d /* store the width of image in %r8 */
+	movl IMAGE_HEIGHT_OFFSET(%rdi), %r9d /* store the height of rdi into %r9 */
+
+	movl %r8d, IMAGE_WIDTH_OFFSET(%rsi) /* Load the width into the output image */
+	movl %r8d, IMAGE_HEIGHT_OFFSET(%rsi) /* Load the height into the output image */
+
+	xorl %eax, %eax /* i = 0 counter for outer loop */	
+	
+	.row_loop_start:
+	cmpl %r9d, %eax /* comparing i to height, i < height */
+	jge .row_loop_end /* if i >= height, then end loop */
+
+	xorl %ecx, %ecx /* count for inner loop */
+	
+	.column_loop_start:
+	cmp %r8d, %ecx /* comparing j to width, j < width */
+	jge .column_loop_end /* if j >= width, then end inner loop */
+
+	/* call is_in_ellipse */
+	movl %eax, %edi /* first arguement, rows */
+	movl %ecx, %esi /* second arguement, columns */
+
+	movl %r8d, %rdx /* third arguement, width */
+	movl %r9d, %rcx /* fourth arguement, height */
+
+	call is_in_elipse
+
+
+
 	ret
 
 /*
