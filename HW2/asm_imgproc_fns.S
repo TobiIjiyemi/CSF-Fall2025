@@ -327,7 +327,10 @@ imgproc_emboss:
 	movq IMAGE_DATA_OFFSET(%rdi), %r10 /*save data pointer to r10*/
 	movq IMAGE_DATA_OFFSET(%rsi), %r11 /*save other data pointer to r11*/
 	movl (%r10, %rcx, 4), %ebx /*save memory at calculated location to ebx*/
-
+	pushq %rdi /*save rdi to the stack*/
+	movl %ebx, %edx /*save ebx to first argument register*/
+	call get_a /*eax should contain just the alpha values of ebx now*/
+	
 	addl $1, ecx /*increment by 1 for counter*/
 	jmp .toprow_loop_start
 
