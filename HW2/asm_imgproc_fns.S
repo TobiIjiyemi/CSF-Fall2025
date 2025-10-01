@@ -14,6 +14,30 @@
  * Don't forget to use the .globl directive to make
  * them visible to the test code.
  */
+	.globl get_a
+
+/*function to get alpha value*/
+get_a:
+	movl %edx, %eax /*move data directly to return register*/
+	andl $0xFF, %eax /*mask lower bits of eax and return the result*/
+	ret
+
+get_r:
+	movl %edx, %eax /*move data directly to return register*/
+	shrl $24, %eax /*shift right 24 bits, clear the other bits and move red data into the lowest bits*/
+	ret
+
+get_g:
+	movl %edx, %eax /*move data directly to return register*/
+	andl $0x00FF0000, %eax /*mask just the green bits,*/
+	shrl $16, %eax /*shift by 16 bits to move to lowest bits*/
+	ret
+
+get_b:
+	movl %edx, %eax /*move data direclty to return register*/
+	andl $0x0000FF00, %eax /*mask just the blue bits*/
+	shrl $8, %eax /*shift by 8 bits to move to lowest bits*/
+	ret
 
 	.globl is_in_elipse
 is_in_elipse:
@@ -228,7 +252,7 @@ imgproc_ellipse:
 	movl IMAGE_HEIGHT_OFFSET(%rdi), %r9d /* store the height of rdi into %r9 */
 
 	movl %r8d, IMAGE_WIDTH_OFFSET(%rsi) /* Load the width into the output image */
-	movl %r8d, IMAGE_HEIGHT_OFFSET(%rsi) /* Load the height into the output image */
+	movl %r9d, IMAGE_HEIGHT_OFFSET(%rsi) /* Load the height into the output image */
 
 	xorl %eax, %eax /* i = 0 counter for outer loop */	
 	
@@ -290,7 +314,24 @@ imgproc_ellipse:
  */
 	.globl imgproc_emboss
 imgproc_emboss:
-	/* TODO: implement */
+	movl IMAGE_WIDTH_OFFSET(%rdi), %r8d /*move width to r8*/
+	movl IMAGE_HEIGHT_OFFSET(%rsi), %r9d /*move height to r9*/
+
+	movl %r8d, IMAGE_WIDTH_OFFSET(%rsi) /*set width of image to r8d*/
+	movl %r9d, IMAGE_HEIGHT_OFFSET(%rsi) /*set height of image to r9d*/
+
+	xorl %eax, %ecx /*start loop to go through top row of image*/
+	.toprow_loop_start:
+	cmp %r8d, %ecx /*compare with width, for this subfunction we're only loop through the top of the iamge*/
+	jge .toprow_loop_end /*if index is greater than width, stop*/
+	movq IMAGE_DATA_OFFSET(%rdi), %r10 /*save data pointer to r10*/
+	movq IMAGE_DATA_OFFSET(%rsi), %r11 /*save other data pointer to r11*/
+	movl (%r10, %rcx, 4), %ebx /*save memory at calculated location to ebx*/
+
+	addl $1, ecx /*increment by 1 for counter*/
+	jmp .toprow_loop_start
+
+	.toprow_loop_end:
 	ret
 
 /*
