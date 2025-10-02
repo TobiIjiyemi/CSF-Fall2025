@@ -68,10 +68,20 @@ is_in_elipse:
 	idivl %r9d /* check_y = (10000 * (dist_y * dist_y)) / (b_diff * b_diff); */
 	movl %eax, %r13d
 
-	addl %r12d, %r13d
-	cmpl $10000, %r13d
+	addl %r12d, %r13d /* check_x + check_y */
+	cmpl $10000, %r13d /* check_x + check_y <= 10000 */
+
 	jle .inside_ellipse
+	jg .outside_ellipse
+
+	.inside_ellipse
+	movl $1, %eax
 	ret
+
+	.outside_ellipse
+	movl $0, %eax
+	ret
+
 
 
 /*
@@ -254,6 +264,8 @@ imgproc_ellipse:
 	movl %r8d, IMAGE_WIDTH_OFFSET(%rsi) /* Load the width into the output image */
 	movl %r9d, IMAGE_HEIGHT_OFFSET(%rsi) /* Load the height into the output image */
 
+	movl IMAGE_DATA_OFFSET(%rsi), %r10d
+
 	xorl %eax, %eax /* i = 0 counter for outer loop */	
 	
 	.row_loop_start:
@@ -266,6 +278,9 @@ imgproc_ellipse:
 	cmp %r8d, %ecx /* comparing j to width, j < width */
 	jge .column_loop_end /* if j >= width, then end inner loop */
 
+	pushq %rax /* save row */
+	pushq %rcx /* save column */
+
 	/* call is_in_ellipse */
 	movl %eax, %edi /* first arguement, rows */
 	movl %ecx, %esi /* second arguement, columns */
@@ -273,7 +288,18 @@ imgproc_ellipse:
 	movl %r8d, %rdx /* third arguement, width */
 	movl %r9d, %rcx /* fourth arguement, height */
 
-	call is_in_elipse
+	call is_in_elipse /* 0 if not in ellipse, 1 if in ellipse */
+
+	movl %eax, %r11d /* store 0 or 1 in r11d */
+
+
+	popq %rax /* restore column */
+	popq %rcx /* restore row */
+
+	movl %rax, %r12d /* store column in r12 */
+
+	imull %r8d, %eax /* row * width */
+	addl %ecx, %eax /* rcx stores row * width + col */
 
 
 
