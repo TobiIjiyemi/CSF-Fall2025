@@ -15,28 +15,41 @@
  * them visible to the test code.
  */
 	.globl get_a
-
 /*function to get alpha value*/
 get_a:
 	movl %edx, %eax /*move data directly to return register*/
 	andl $0xFF, %eax /*mask lower bits of eax and return the result*/
 	ret
 
+	.globl get_r
 get_r:
 	movl %edx, %eax /*move data directly to return register*/
 	shrl $24, %eax /*shift right 24 bits, clear the other bits and move red data into the lowest bits*/
 	ret
 
+	.globl get_g
 get_g:
 	movl %edx, %eax /*move data directly to return register*/
 	andl $0x00FF0000, %eax /*mask just the green bits,*/
 	shrl $16, %eax /*shift by 16 bits to move to lowest bits*/
 	ret
 
+	.globl get_b
 get_b:
 	movl %edx, %eax /*move data direclty to return register*/
 	andl $0x0000FF00, %eax /*mask just the blue bits*/
 	shrl $8, %eax /*shift by 8 bits to move to lowest bits*/
+	ret
+
+	.globl make_pixel
+make_pixel:
+	shll $8, %edi /*shift the red bits up by 8 bits*/
+	addl %esi, %edi /*add green bits to red bits, */
+	shll $8, %edi /*shift green and red up by 8. red is now 16 further than where it started, and green is just +8*/
+	addl %edx, %edi /*add blue bits to green and red.*/
+	shll $8, %edi /*shift up 8 bits, red is +24 bits, green is +16, and blue is +8 bits.*/
+	addl %ecx, %edi /*add remaining alpha bits*/
+	movl %edi, %eax /*move resulting value to eax and return*/
 	ret
 
 	.globl is_in_elipse
@@ -356,11 +369,13 @@ imgproc_emboss:
 	pushq %rdi /*save rdi to the stack*/
 	movl %ebx, %edx /*save ebx to first argument register*/
 	call get_a /*eax should contain just the alpha values of ebx now*/
-	
+	/*make a new pixel with 128, 128, 128, and alpha value*/
 	addl $1, ecx /*increment by 1 for counter*/
 	jmp .toprow_loop_start
 
 	.toprow_loop_end:
+
+
 	ret
 
 /*
