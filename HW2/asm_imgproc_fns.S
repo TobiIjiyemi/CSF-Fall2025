@@ -55,6 +55,10 @@ make_pixel:
 	.globl is_in_ellipse
 is_in_ellipse:
 
+	pushq %rbp
+	movq %rsp, %rbp
+	pushq %rbx
+
 	movq %rdx, %r8 /* set r8 = width */
 	shrq $1, %r8 /* a_diff = width/2 */
 
@@ -99,11 +103,16 @@ is_in_ellipse:
 
 	.inside_ellipse:
 	movq $1, %rax
-	ret
+	jmp .epilogue
 
 	.outside_ellipse:
 	movq $0, %rax
+
+	.epilogue:
+	popq %rbx
+	popq %rbp
 	ret
+
 
 
 /*
@@ -283,12 +292,16 @@ imgproc_ellipse:
 	pushq %rbp
 	movq %rsp, %rbp
 	pushq %rbx	
+	pushq %r12
+	pushq %r13
+	pushq %r14
+	pushq %r15
 	
-	movq IMAGE_WIDTH_OFFSET(%rdi), %r12 /* store the width of image in %r12 */
-	movq IMAGE_HEIGHT_OFFSET(%rdi), %r13 /* store the height of rdi into %r13 */
+	movl IMAGE_WIDTH_OFFSET(%rdi), %r12d /* store the width of image in %r12 */
+	movl IMAGE_HEIGHT_OFFSET(%rdi), %r13d /* store the height of rdi into %r13 */
 
-	movq %r12, IMAGE_WIDTH_OFFSET(%rsi) /* Load the width into the output image */
-	movq %r13, IMAGE_HEIGHT_OFFSET(%rsi) /* Load the height into the output image */
+	movl %r12d, IMAGE_WIDTH_OFFSET(%rsi) /* Load the width into the output image */
+	movl %r13d, IMAGE_HEIGHT_OFFSET(%rsi) /* Load the height into the output image */
 
 	movq IMAGE_DATA_OFFSET(%rdi), %r14 /* r14 = input_img->data */
 	movq IMAGE_DATA_OFFSET(%rsi), %r15 /* r15 = output_img->data */
@@ -369,6 +382,10 @@ imgproc_ellipse:
 
 	.row_loop_end:
 	/* popping callee saved registers that were used */
+	popq %r15
+	popq %r14
+	popq %r13
+	popq %r12
 	popq %rbx
 	popq %rbp
 	ret
