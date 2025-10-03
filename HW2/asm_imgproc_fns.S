@@ -55,72 +55,56 @@ make_pixel:
 	.globl is_in_ellipse
 is_in_ellipse:
 
-	/* prologue */
-	pushq %rbp
-	movq %rsp, %rbp
-	pushq %r12
-	pushq %r13
-	pushq %r14
-	pushq %r15
-	subq $8, %rsp
+	movq %rdx, %r8 /* set r8 = width */
+	shrq $1, %r8 /* a_diff = width/2 */
 
-	movq %rdx, %r12 /* set r12 = width */
-	shrq $1, %r12 /* a_diff = width/2 */
-
-	movq %rcx, %r13 /* set r13 = height */
-	shrq $1, %r13 /* b_diff = height/2 */
+	movq %rcx, %r9 /* set r9 = height */
+	shrq $1, %r9 /* b_diff = height/2 */
 
 	movq %rsi, %rax /* rax = col */
-	subq %r12, %rax /* dist_x = col - a_diff */
+	subq %r8, %rax /* dist_x = col - a_diff */
 	
 	movq %rdi, %rbx /* rbx = row */
-	subq %r13, %rbx /* dist_y = row - b_diff */
+	subq %r9, %rbx /* dist_y = row - b_diff */
 
 	imulq %rax, %rax /* rax = dist_x * dist_x */
 	imulq $10000, %rax /* 10000 * dist_x^2 */
 
-	movq %r12, %r14
-	imulq %r14, %r14 /* a_diff * a_diff */
+	movq %r8, %r10
+	imulq %r10, %r10 /* a_diff * a_diff */
 	
 	xorq %rdx, %rdx
 	
-	idivq %r14 /* check_x = (10000 * (dist_x * dist_x)) / (a_diff * a_diff); */
-	movq %rax, %r14 /* check_x */
+	idivq %r10 /* check_x = (10000 * (dist_x * dist_x)) / (a_diff * a_diff); */
+	movq %rax, %r10 /* check_x */
 
 	imulq %rbx, %rbx /* dist_y * dist_y */
 	imulq $10000, %rbx /* 10000 * esi */
 	
-	movq %r13, %r15
-	imulq %r15, %r15 /* b_diff * b_diff */
+	movq %r9, %r11
+	imulq %r11, %r11 /* b_diff * b_diff */
 	
 	movq %rbx, %rax
 
 	xorq %rdx, %rdx
 
-	idivq %r15 /* check_y = (10000 * (dist_y * dist_y)) / (b_diff * b_diff); */
+	idivq %r11 /* check_y = (10000 * (dist_y * dist_y)) / (b_diff * b_diff); */
 	
-	movq %rax, %r15 /* r15 = check_y */
+	movq %rax, %r11 /* r11 = check_y */
 
-	addq %r14, %r15 /* check_x + check_y */
-	cmpq $10000, %r15 /* check_x + check_y <= 10000 */
+	addq %r10, %r11 /* check_x + check_y */
+	cmpq $10000, %r11 /* check_x + check_y <= 10000 */
 
 	jg .outside_ellipse
 
 	.inside_ellipse:
 	movq $1, %rax
-	jmp .epilogue
+	ret
 
 	.outside_ellipse:
 	movq $0, %rax
-
-	.epilogue:
-	addq $8, %rsp
-	popq %r15
-	popq %r14
-	popq %r13
-	popq %r12
-	popq %rbp
 	ret
+
 
 /*
  * Definitions of image transformation functions
@@ -305,8 +289,8 @@ imgproc_ellipse:
 	pushq %r15
 	subq $8, %rsp
 	
-	movq IMAGE_WIDTH_OFFSET(%rdi), %r12 /* store the width of image in %r8 */
-	movq IMAGE_HEIGHT_OFFSET(%rdi), %r13 /* store the height of rdi into %r9 */
+	movq IMAGE_WIDTH_OFFSET(%rdi), %r12 /* store the width of image in %r12 */
+	movq IMAGE_HEIGHT_OFFSET(%rdi), %r13 /* store the height of rdi into %r13 */
 
 	movq %r12, IMAGE_WIDTH_OFFSET(%rsi) /* Load the width into the output image */
 	movq %r13, IMAGE_HEIGHT_OFFSET(%rsi) /* Load the height into the output image */
@@ -330,8 +314,6 @@ imgproc_ellipse:
 
 	pushq %rax /* save row */
 	pushq %rcx /* save col */
-	pushq %r12 /* save width */
-	pushq %r13 /* save height */
 
 	movq %rax, %rdi /* first arguement, rows */
 	movq %rcx, %rsi /* second arguement, columns */
@@ -343,8 +325,6 @@ imgproc_ellipse:
 
 	cmpq $1, %rax /* if 1, then in ellipse, if not then skip */
 
-	popq %r13 /* restore height */
-	popq %r12 /* restore width */
 	popq %rcx /* resore col */
 	popq %rax /* restore row */
 
@@ -357,7 +337,6 @@ imgproc_ellipse:
 	movl (%r14, %rbx, 4), %r11d /* load input pixel into r11d */
 
 	pushq %rcx
-	pushq %rsi
 
 	/* load rgba */
 	movl %r11d, %edx
@@ -374,16 +353,15 @@ imgproc_ellipse:
 
 	movl %r11d, %edx
 	call get_a
-	movl %eax, %r13d /* r13d = a */
+	movl %eax, %r11d /* r11d = a */
 
 	movl %r8d, %edi
     movl %r9d, %esi
     movl %r10d, %edx
-    movl %r13d, %ecx
+    movl %r11d, %ecx
 	call make_pixel
 	movl %eax, (%r15, %rbx, 4)
-
-	popq %rsi
+	
 	popq %rcx /* restore col counter */
 
 	.skip_pixel:
@@ -472,7 +450,7 @@ imgproc_emboss:
 	call make_pixel /*new built pixel value should be in eax*/
 	popq %rcx /*bring back counter value*/
 	movl %eax, (%r11, %rcx, 4)/*save in calculated index*/
-	addl $1, ecx /*increment by 1 for counter*/
+	addl $1, %ecx /*increment by 1 for counter*/
 	jmp .toprow_loop_start
 
 	.toprow_loop_end:
