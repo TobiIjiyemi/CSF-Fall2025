@@ -58,7 +58,7 @@ is_in_ellipse:
 	movq %rdx, %r8 /* set r8d = width */
 	shrq $1, %r8 /* a_diff = width/2 */
 
-	movq %r10, %r9 /* set r9d = height */
+	movq %rcx, %r9 /* set r9d = height */
 	shrq $1, %r9 /* b_diff = height/2 */
 
 	movq %rsi, %r12 /* r12 = col */
@@ -70,19 +70,25 @@ is_in_ellipse:
 	imulq %r12, %r12 /* dist_x * dist_x stored in r12 */
 	imulq $10000, %r12 /* 10000 * dist_x^2 */
 	
-	imulq %r8, %r8 /* a_diff * a_diff */
+	movq %r8, %r10
+	imulq %r10, %r10 /* a_diff * a_diff */
 	
 	movq %r12, %rax
+	xorq %rdx, %rdx
 	
-	idivq %r8 /* check_x = (10000 * (dist_x * dist_x)) / (a_diff * a_diff); */
+	idivq %r10 /* check_x = (10000 * (dist_x * dist_x)) / (a_diff * a_diff); */
 	movq %rax, %r14 /* check_x */
 
 	imulq %r13, %r13 /* dist_y * dist_y stored in esi */
 	imulq $10000, %r13 /* 10000 * esi */
-	imulq %r9, %r9 /* b_diff * b_diff */
+	
+	movq %r9, %r11
+	imulq %r11, %r11 /* b_diff * b_diff */
+	
 	movq %r13, %rax
 
-	idivq %r9 /* check_y = (10000 * (dist_y * dist_y)) / (b_diff * b_diff); */
+	xorq %rdx, %rdx
+	idivq %r11 /* check_y = (10000 * (dist_y * dist_y)) / (b_diff * b_diff); */
 	movq %rax, %r15
 
 	addq %r14, %r15 /* check_x + check_y */
@@ -272,6 +278,11 @@ imgproc_transpose:
 	.globl imgproc_ellipse
 imgproc_ellipse:
 	/* TODO: implement */
+	/* pushing callee saved registers being ussed */
+	pushq %r12
+	pushq %r13
+	pushq %r14
+	pushq %r15
 	
 	movq IMAGE_WIDTH_OFFSET(%rdi), %r8 /* store the width of image in %r8 */
 	movq IMAGE_HEIGHT_OFFSET(%rdi), %r9 /* store the height of rdi into %r9 */
@@ -305,7 +316,7 @@ imgproc_ellipse:
 	movq %rcx, %rsi /* second arguement, columns */
 
 	movq %r8, %rdx /* third arguement, width */
-	movq %r9, %r10 /* fourth arguement, height */
+	movq %r9, %rcx /* fourth arguement, height */
 
 	call is_in_ellipse /* 0 if not in ellipse, 1 if in ellipse */
 
@@ -324,35 +335,37 @@ imgproc_ellipse:
 
 	movl (%r14, %r10, 4), %r11d /* load input pixel into r11d */
 
+	pushq %rcx
 	pushq %r8 /* save width */
 	pushq %r9 /* save height */
 
 	/* load rgba */
-	movl %r11d, %r12d
+	movl %r11d, %edx
 	call get_r
 	movl %eax, %r8d /* r8d = r */
 
-	movl %r11d, %r12d
+	movl %r11d, %edx
 	call get_g
 	movl %eax, %r9d /* r9d = g */
 
-	movl %r11d, %r12d
+	movl %r11d, %edx
 	call get_b
-	movl %eax, %r10d /* r10d = b */
+	movl %eax, %r12d /* r12d = b */
 
-	movl %r11d, %r12d
+	movl %r11d, %edx
 	call get_a
 	movl %eax, %r13d /* r13d = a */
 
 	movl %r8d, %edi
     movl %r9d, %esi
-    movl %r10d, %edx
+    movl %r12d, %edx
     movl %r13d, %ecx
 	call make_pixel
 	movl %eax, (%r15, %r10, 4)
 
-	popq %r9
-	popq %r8
+	popq %r9 /* restore height */
+	popq %r8 /* restore width */
+	popq %rcx /* restore col counter */
 
 	.skip_pixel:
 	incq %rcx
@@ -363,6 +376,11 @@ imgproc_ellipse:
 	jmp .row_loop_start
 
 	.row_loop_end:
+	/* popping callee saved registers that were used */
+	popq %r15
+	popq %r14
+	popq %r13
+	popq %r12
 	ret
 
 /*
