@@ -91,7 +91,7 @@ void destroy_img( struct Image *img );
 // Test functions
 void test_complement_basic( TestObjs *objs );
 void test_transpose_basic( TestObjs *objs );
-// void test_ellipse_basic( TestObjs *objs );
+void test_ellipse_basic( TestObjs *objs );
 // void test_emboss_basic( TestObjs *objs );
 // TODO: add prototypes for additional test functions
 /*
@@ -118,14 +118,14 @@ int main( int argc, char **argv ) {
   // for any additional test functions you add.
   TEST( test_complement_basic );
   TEST( test_transpose_basic );
-  // TEST( test_ellipse_basic );
+  TEST( test_ellipse_basic );
   // TEST( test_emboss_basic );
 
   /*
   TEST (test_get_RGBA_functions);
   TEST (test_make_pixel);
-  TEST (test_compute_index );
   TEST (test_is_ellipse);
+  TEST (test_compute_index );
   TEST (test_is_in_ellipse_boundaries);
   TEST (test_get_max );
   TEST (test_get_RGBA_2);
@@ -390,6 +390,7 @@ void test_emboss_basic( TestObjs *objs ) {
 
   destroy_img( smiley_emboss_expected );
 }
+
 
 /*
 

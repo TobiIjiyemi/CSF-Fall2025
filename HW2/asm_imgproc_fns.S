@@ -55,44 +55,47 @@ make_pixel:
 	.globl is_in_elipse
 is_in_elipse:
 
-	movl %edx, %r8d /* set r8d = width */
-	shrl $1, %r8d /* a_diff = width/2 */
+	movq %rdx, %r8 /* set r8d = width */
+	shrq $1, %r8 /* a_diff = width/2 */
 
-	movl %ecx, %r9d /* set r9d = height */
-	shrl $1, %r9d /* b_diff = height/2 */
+	movq %rcx, %r9 /* set r9d = height */
+	shrq $1, %r9 /* b_diff = height/2 */
 
-	subl %r8d, %edi /* row minus width/2 so store in edi, dist_x = row - a_diff */
-	subl %r9d, %esi /* col minust height/2 so store in esi dist_y = col - b_diff */
-
+	movq %rsi, %r12 /* r12 = col */
+	subq %r8, %r12 /* dist_x = col - a_diff */
 	
-	imull %edi, %edi /* dist_x * dist_x stored in edi */
-	imull $10000, %edi /* 10000 * edi */
-	imull %r8d, %r8d /* a_diff * a_diff */
-	movl %edi, %eax
-	xorl %edx, %edx /* clear upper bits */
-	idivl %r8d /* check_x = (10000 * (dist_x * dist_x)) / (a_diff * a_diff); */
-	movl %eax, %r12d
+	movq %rdi, %r13 /* r13 = row */
+	subq %r9, %r13 /* dist_y = row - b_diff */
 
-	imull %esi, %esi /* dist_y * dist_y stored in esi */
-	imull $10000, %esi /* 10000 * esi */
-	imull %r9d, %r9d /* b_diff * b_diff */
-	movl %esi, %eax
-	xorl %edx, %edx /* clear upper bits */
-	idivl %r9d /* check_y = (10000 * (dist_y * dist_y)) / (b_diff * b_diff); */
-	movl %eax, %r13d
+	imulq %r12, %r12 /* dist_x * dist_x stored in r12 */
+	imulq $10000, %r12 /* 10000 * dist_x^2 */
+	
+	imulq %r8, %r8 /* a_diff * a_diff */
+	
+	movq %r12, %rax
+	
+	idivq %r8 /* check_x = (10000 * (dist_x * dist_x)) / (a_diff * a_diff); */
+	movq %rax, %r14 /* check_x */
 
-	addl %r12d, %r13d /* check_x + check_y */
-	cmpl $10000, %r13d /* check_x + check_y <= 10000 */
+	imulq %r13, %r13 /* dist_y * dist_y stored in esi */
+	imulq $10000, %r13 /* 10000 * esi */
+	imulq %r9, %r9 /* b_diff * b_diff */
+	movq %r13, %rax
 
-	jle .inside_ellipse
+	idivq %r9 /* check_y = (10000 * (dist_y * dist_y)) / (b_diff * b_diff); */
+	movq %rax, %r15
+
+	addq %r14, %r15 /* check_x + check_y */
+	cmpq $10000, %r15 /* check_x + check_y <= 10000 */
+
 	jg .outside_ellipse
 
-	.inside_ellipse
-	movl $1, %eax
+	.inside_ellipse:
+	movq $1, %rax
 	ret
 
-	.outside_ellipse
-	movl $0, %eax
+	.outside_ellipse:
+	movq $0, %rax
 	ret
 
 
@@ -200,7 +203,7 @@ imgproc_transpose:
 	jne .not_square /* If width and height are not equal, then jump to the label not_square  */
 
 	movl %r8d, IMAGE_WIDTH_OFFSET(%rsi) /* Load the width into the output image */
-	movl %r8d, IMAGE_HEIGHT_OFFSET(%rsi) /* Load the height into the output image */
+	movl %r9d, IMAGE_HEIGHT_OFFSET(%rsi) /* Load the height into the output image */
 
 	movq IMAGE_DATA_OFFSET(%rdi), %r10 /* input_img->data */
 	movq IMAGE_DATA_OFFSET(%rsi), %r11 /* output_img->data */
@@ -210,7 +213,6 @@ imgproc_transpose:
 	.outer_loop_start:
 	cmpl %r9d, %eax /* comparing i to height, i < height */
 	jge .outer_loop_end /* if i >= height, then end loop */
-
 
 	xorl %ecx, %ecx /* count for inner loop */
 	
@@ -271,51 +273,100 @@ imgproc_transpose:
 imgproc_ellipse:
 	/* TODO: implement */
 	
-	movl IMAGE_WIDTH_OFFSET(%rdi), %r8d /* store the width of image in %r8 */
-	movl IMAGE_HEIGHT_OFFSET(%rdi), %r9d /* store the height of rdi into %r9 */
+	movq IMAGE_WIDTH_OFFSET(%rdi), %r8 /* store the width of image in %r8 */
+	movq IMAGE_HEIGHT_OFFSET(%rdi), %r9 /* store the height of rdi into %r9 */
 
-	movl %r8d, IMAGE_WIDTH_OFFSET(%rsi) /* Load the width into the output image */
-	movl %r9d, IMAGE_HEIGHT_OFFSET(%rsi) /* Load the height into the output image */
+	movq %r8, IMAGE_WIDTH_OFFSET(%rsi) /* Load the width into the output image */
+	movq %r9, IMAGE_HEIGHT_OFFSET(%rsi) /* Load the height into the output image */
 
-	movl IMAGE_DATA_OFFSET(%rsi), %r10d
+	movq IMAGE_DATA_OFFSET(%rdi), %r14 /* r14 = input_img->data */
+	movq IMAGE_DATA_OFFSET(%rsi), %r15 /* r15 = output_img->data */
 
-	xorl %eax, %eax /* i = 0 counter for outer loop */	
+	xorq %rax, %rax /* i = 0 counter for outer loop */	
 	
 	.row_loop_start:
-	cmpl %r9d, %eax /* comparing i to height, i < height */
+	cmpq %r9, %rax /* comparing i to height, i < height */
 	jge .row_loop_end /* if i >= height, then end loop */
 
-	xorl %ecx, %ecx /* count for inner loop */
+	xorq %rcx, %rcx /* count for inner loop */
 	
 	.column_loop_start:
-	cmp %r8d, %ecx /* comparing j to width, j < width */
+	cmpq %r8, %rcx /* comparing j to width, j < width */
 	jge .column_loop_end /* if j >= width, then end inner loop */
 
-	pushq %rax /* save row */
-	pushq %rcx /* save column */
-
 	/* call is_in_ellipse */
-	movl %eax, %edi /* first arguement, rows */
-	movl %ecx, %esi /* second arguement, columns */
 
-	movl %r8d, %rdx /* third arguement, width */
-	movl %r9d, %rcx /* fourth arguement, height */
+	pushq %r8 /* save width */
+	pushq %r9 /* save height */
+
+	pushq %rax /* save row */
+	pushq %rcx /* save col */
+
+	movq %rax, %rdi /* first arguement, rows */
+	movq %rcx, %rsi /* second arguement, columns */
+
+	movq %r8, %rdx /* third arguement, width */
+	movq %r9, %rcx /* fourth arguement, height */
 
 	call is_in_elipse /* 0 if not in ellipse, 1 if in ellipse */
 
-	movl %eax, %r11d /* store 0 or 1 in r11d */
+	cmpq $1, %rax /* if 1, then in ellipse, if not then skip */
+	jne .skip_pixel
 
+	popq %r9 /* restore height */
+	popq %r8 /* restore width */
+	popq %rcx /* resore col */
+	popq %rax /* restore row */
 
-	popq %rax /* restore column */
-	popq %rcx /* restore row */
+	pushq %rax 
 
-	movl %rax, %r12d /* store column in r12 */
+	imulq %r8, %rax /* rax = row * width */
+	
+	addq %rcx, %rax /* rax = (row * width) + col */
 
-	imull %r8d, %eax /* row * width */
-	addl %ecx, %eax /* rcx stores row * width + col */
+	movl (%r14, %rax, 4), %r10d /* load input pixel into r10d */
 
+	popq %rax /* restore row again for incrementing */
 
+	pushq %r8 /* save width */
+	pushq %r9 /* save height */
 
+	/* load rgba */
+	movl %r10d, %r12d
+	call get_r
+	movl %eax, %r11d /* r11d = r */
+
+	movl %r10d, %r12d
+	call get_g
+	movl %eax, %r13d /* r13d = g */
+
+	movl %r10d, %r12d
+	call get_b
+	movl %eax, %r8d /* r8d = b */
+
+	movl %r10d, %r12d
+	call get_a
+	movl %eax, %r9d /* r9d = a */
+
+	movl %r11d, %edi
+    movl %r13d, %esi
+    movl %r8d, %edx
+    movl %r9d, %ecx
+	call make_pixel
+	movl %eax, (%r15, %rax, 4)
+
+	popq %r9
+	popq %r8
+
+	.skip_pixel:
+	incq %rcx
+	jmp .column_loop_start
+	
+	.column_loop_end:
+	incq %rax
+	jmp .row_loop_start
+
+	.row_loop_end:
 	ret
 
 /*
@@ -370,7 +421,7 @@ imgproc_emboss:
 	movl %ebx, %edx /*save ebx to first argument register*/
 	call get_a /*eax should contain just the alpha values of ebx now*/
 	/*make a new pixel with 128, 128, 128, and alpha value*/
-	addl $1, ecx /*increment by 1 for counter*/
+	addl $1, %ecx /*increment by 1 for counter*/
 	jmp .toprow_loop_start
 
 	.toprow_loop_end:
