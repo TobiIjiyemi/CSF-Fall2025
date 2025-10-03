@@ -16,11 +16,6 @@
  */
 	.globl get_a
 /*function to get alpha value*/
-get_a:
-	movl %edx, %eax /*move data directly to return register*/
-	andl $0xFF, %eax /*mask lower bits of eax and return the result*/
-	ret
-
 	.globl get_r
 get_r:
 	movl %edx, %eax /*move data directly to return register*/
@@ -30,15 +25,20 @@ get_r:
 	.globl get_g
 get_g:
 	movl %edx, %eax /*move data directly to return register*/
-	andl $0x00FF0000, %eax /*mask just the green bits,*/
-	shrl $16, %eax /*shift by 16 bits to move to lowest bits*/
+	shll $8, %eax
+	shrl $24, %eax 
 	ret
 
 	.globl get_b
 get_b:
 	movl %edx, %eax /*move data direclty to return register*/
-	andl $0x0000FF00, %eax /*mask just the blue bits*/
-	shrl $8, %eax /*shift by 8 bits to move to lowest bits*/
+	shll $16, %eax /*mask just the blue bits*/
+	shrl $24, %eax /*shift by 8 bits to move to lowest bits*/
+	ret
+get_a:
+	movl %edx, %eax /*move data directly to return register*/
+	shll $24, %eax /*mask lower bits of eax and return the result*/
+	shrl $24, %eax
 	ret
 
 	.globl make_pixel
@@ -367,6 +367,7 @@ imgproc_ellipse:
     movl %r9d, %esi
     movl %r10d, %edx
     movl %r11d, %ecx
+	
 	call make_pixel
 	movl %eax, (%r15, %rbx, 4)
 	
