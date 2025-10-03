@@ -279,15 +279,10 @@ imgproc_transpose:
 imgproc_ellipse:
 	/* TODO: implement */
 	
-	/* prologie: pushing callee saved registers being ussed */
+	/* prologue: pushing callee saved registers being used */
 	pushq %rbp
 	movq %rsp, %rbp
 	pushq %rbx	
-	pushq %r12
-	pushq %r13
-	pushq %r14
-	pushq %r15
-	subq $8, %rsp
 	
 	movq IMAGE_WIDTH_OFFSET(%rdi), %r12 /* store the width of image in %r12 */
 	movq IMAGE_HEIGHT_OFFSET(%rdi), %r13 /* store the height of rdi into %r13 */
@@ -301,7 +296,7 @@ imgproc_ellipse:
 	xorq %rax, %rax /* i = 0 counter for outer loop */	
 	
 	.row_loop_start:
-	cmpq %r13, %rax /* comparing i to height, i < height */
+	cmpq %r13, %rax /* comparing i to height, i < height : height - rax */
 	jge .row_loop_end /* if i >= height, then end loop */
 
 	xorq %rcx, %rcx /* count for inner loop */
@@ -374,11 +369,6 @@ imgproc_ellipse:
 
 	.row_loop_end:
 	/* popping callee saved registers that were used */
-	addq $8, %rsp
-	popq %r15
-	popq %r14
-	popq %r13
-	popq %r12
 	popq %rbx
 	popq %rbp
 	ret
