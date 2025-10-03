@@ -55,41 +55,51 @@ make_pixel:
 	.globl is_in_ellipse
 is_in_ellipse:
 
-	movq %rdx, %r8 /* set r8d = width */
-	shrq $1, %r8 /* a_diff = width/2 */
+	/* prologue */
+	pushq %rbp
+	movq %rsp, %rbp
+	pushq %r12
+	pushq %r13
+	pushq %r14
+	pushq %r15
+	subq $8, %rsp
 
-	movq %rcx, %r9 /* set r9d = height */
-	shrq $1, %r9 /* b_diff = height/2 */
+	movq %rdx, %r12 /* set r12 = width */
+	shrq $1, %r12 /* a_diff = width/2 */
 
-	movq %rsi, %r12 /* r12 = col */
-	subq %r8, %r12 /* dist_x = col - a_diff */
-	
-	movq %rdi, %r13 /* r13 = row */
-	subq %r9, %r13 /* dist_y = row - b_diff */
+	movq %rcx, %r13 /* set r13 = height */
+	shrq $1, %r13 /* b_diff = height/2 */
 
-	imulq %r12, %r12 /* dist_x * dist_x stored in r12 */
-	imulq $10000, %r12 /* 10000 * dist_x^2 */
+	movq %rsi, %rax /* rax = col */
+	subq %r12, %rax /* dist_x = col - a_diff */
 	
-	movq %r8, %r10
-	imulq %r10, %r10 /* a_diff * a_diff */
+	movq %rdi, %rbx /* rbx = row */
+	subq %r13, %rbx /* dist_y = row - b_diff */
+
+	imulq %rax, %rax /* rax = dist_x * dist_x */
+	imulq $10000, %rax /* 10000 * dist_x^2 */
+
+	movq %r12, %r14
+	imulq %r14, %r14 /* a_diff * a_diff */
 	
-	movq %r12, %rax
 	xorq %rdx, %rdx
 	
-	idivq %r10 /* check_x = (10000 * (dist_x * dist_x)) / (a_diff * a_diff); */
+	idivq %r14 /* check_x = (10000 * (dist_x * dist_x)) / (a_diff * a_diff); */
 	movq %rax, %r14 /* check_x */
 
-	imulq %r13, %r13 /* dist_y * dist_y stored in esi */
-	imulq $10000, %r13 /* 10000 * esi */
+	imulq %rbx, %rbx /* dist_y * dist_y */
+	imulq $10000, %rbx /* 10000 * esi */
 	
-	movq %r9, %r11
-	imulq %r11, %r11 /* b_diff * b_diff */
+	movq %r13, %r15
+	imulq %r15, %r15 /* b_diff * b_diff */
 	
-	movq %r13, %rax
+	movq %rbx, %rax
 
 	xorq %rdx, %rdx
-	idivq %r11 /* check_y = (10000 * (dist_y * dist_y)) / (b_diff * b_diff); */
-	movq %rax, %r15
+
+	idivq %r15 /* check_y = (10000 * (dist_y * dist_y)) / (b_diff * b_diff); */
+	
+	movq %rax, %r15 /* r15 = check_y */
 
 	addq %r14, %r15 /* check_x + check_y */
 	cmpq $10000, %r15 /* check_x + check_y <= 10000 */
@@ -98,13 +108,19 @@ is_in_ellipse:
 
 	.inside_ellipse:
 	movq $1, %rax
-	ret
+	jmp .epilogue
 
 	.outside_ellipse:
 	movq $0, %rax
+
+	.epilogue:
+	addq $8, %rsp
+	popq %r15
+	popq %r14
+	popq %r13
+	popq %r12
+	popq %rbp
 	ret
-
-
 
 /*
  * Definitions of image transformation functions
