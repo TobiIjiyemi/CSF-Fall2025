@@ -294,17 +294,22 @@ imgproc_transpose:
 	.globl imgproc_ellipse
 imgproc_ellipse:
 	/* TODO: implement */
-	/* pushing callee saved registers being ussed */
+	
+	/* prologie: pushing callee saved registers being ussed */
+	pushq %rbp
+	movq %rsp, %rbp
+	pushq %rbx	
 	pushq %r12
 	pushq %r13
 	pushq %r14
 	pushq %r15
+	subq $8, %rsp
 	
-	movq IMAGE_WIDTH_OFFSET(%rdi), %r8 /* store the width of image in %r8 */
-	movq IMAGE_HEIGHT_OFFSET(%rdi), %r9 /* store the height of rdi into %r9 */
+	movq IMAGE_WIDTH_OFFSET(%rdi), %r12 /* store the width of image in %r8 */
+	movq IMAGE_HEIGHT_OFFSET(%rdi), %r13 /* store the height of rdi into %r9 */
 
-	movq %r8, IMAGE_WIDTH_OFFSET(%rsi) /* Load the width into the output image */
-	movq %r9, IMAGE_HEIGHT_OFFSET(%rsi) /* Load the height into the output image */
+	movq %r12, IMAGE_WIDTH_OFFSET(%rsi) /* Load the width into the output image */
+	movq %r13, IMAGE_HEIGHT_OFFSET(%rsi) /* Load the height into the output image */
 
 	movq IMAGE_DATA_OFFSET(%rdi), %r14 /* r14 = input_img->data */
 	movq IMAGE_DATA_OFFSET(%rsi), %r15 /* r15 = output_img->data */
@@ -312,48 +317,47 @@ imgproc_ellipse:
 	xorq %rax, %rax /* i = 0 counter for outer loop */	
 	
 	.row_loop_start:
-	cmpq %r9, %rax /* comparing i to height, i < height */
+	cmpq %r13, %rax /* comparing i to height, i < height */
 	jge .row_loop_end /* if i >= height, then end loop */
 
 	xorq %rcx, %rcx /* count for inner loop */
 	
 	.column_loop_start:
-	cmpq %r8, %rcx /* comparing j to width, j < width */
+	cmpq %r12, %rcx /* comparing j to width, j < width */
 	jge .column_loop_end /* if j >= width, then end inner loop */
 
 	/* call is_in_ellipse */
 
 	pushq %rax /* save row */
 	pushq %rcx /* save col */
-	pushq %r8 /* save width */
-	pushq %r9 /* save height */
+	pushq %r12 /* save width */
+	pushq %r13 /* save height */
 
 	movq %rax, %rdi /* first arguement, rows */
 	movq %rcx, %rsi /* second arguement, columns */
 
-	movq %r8, %rdx /* third arguement, width */
-	movq %r9, %rcx /* fourth arguement, height */
+	movq %r12, %rdx /* third arguement, width */
+	movq %r13, %rcx /* fourth arguement, height */
 
 	call is_in_ellipse /* 0 if not in ellipse, 1 if in ellipse */
 
 	cmpq $1, %rax /* if 1, then in ellipse, if not then skip */
 
-	popq %r9 /* restore height */
-	popq %r8 /* restore width */
+	popq %r13 /* restore height */
+	popq %r12 /* restore width */
 	popq %rcx /* resore col */
 	popq %rax /* restore row */
 
 	jne .skip_pixel /* pixel not in ellipse */
 
-	movq %rax, %r10
-	imulq %r8, %r10 /* r10 = row * width */
-	addq %rcx, %r10 /* r10 = (row * width) + col */
+	movq %rax, %rbx
+	imulq %r12, %rbx /* rbx = row * width */
+	addq %rcx, %rbx /* r10 = (row * width) + col */
 
-	movl (%r14, %r10, 4), %r11d /* load input pixel into r11d */
+	movl (%r14, %rbx, 4), %r11d /* load input pixel into r11d */
 
 	pushq %rcx
-	pushq %r8 /* save width */
-	pushq %r9 /* save height */
+	pushq %rsi
 
 	/* load rgba */
 	movl %r11d, %edx
@@ -366,7 +370,7 @@ imgproc_ellipse:
 
 	movl %r11d, %edx
 	call get_b
-	movl %eax, %r12d /* r12d = b */
+	movl %eax, %r10d /* r10d = b */
 
 	movl %r11d, %edx
 	call get_a
@@ -374,13 +378,12 @@ imgproc_ellipse:
 
 	movl %r8d, %edi
     movl %r9d, %esi
-    movl %r12d, %edx
+    movl %r10d, %edx
     movl %r13d, %ecx
 	call make_pixel
-	movl %eax, (%r15, %r10, 4)
+	movl %eax, (%r15, %rbx, 4)
 
-	popq %r9 /* restore height */
-	popq %r8 /* restore width */
+	popq %rsi
 	popq %rcx /* restore col counter */
 
 	.skip_pixel:
@@ -393,10 +396,13 @@ imgproc_ellipse:
 
 	.row_loop_end:
 	/* popping callee saved registers that were used */
+	addq $8, %rsp
 	popq %r15
 	popq %r14
 	popq %r13
 	popq %r12
+	popq %rbx
+	popq %rbp
 	ret
 
 /*
