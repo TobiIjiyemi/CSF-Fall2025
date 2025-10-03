@@ -406,23 +406,48 @@ imgproc_emboss:
 	movl %r8d, IMAGE_WIDTH_OFFSET(%rsi) /*set width of image to r8d*/
 	movl %r9d, IMAGE_HEIGHT_OFFSET(%rsi) /*set height of image to r9d*/
 
-	xorl %eax, %ecx /*start loop to go through top row of image*/
+	xorl %ecx, %ecx /*start loop to go through top row of image*/
+	movq IMAGE_DATA_OFFSET(%rdi), %r10 /*save data pointer to r10*/
+	movq IMAGE_DATA_OFFSET(%rsi), %r11 /*save other data pointer to r11*/
 	.toprow_loop_start:
 	cmp %r8d, %ecx /*compare with width, for this subfunction we're only loop through the top of the iamge*/
 	jge .toprow_loop_end /*if index is greater than width, stop*/
-	movq IMAGE_DATA_OFFSET(%rdi), %r10 /*save data pointer to r10*/
-	movq IMAGE_DATA_OFFSET(%rsi), %r11 /*save other data pointer to r11*/
 	movl (%r10, %rcx, 4), %ebx /*save memory at calculated location to ebx*/
-	pushq %rdi /*save rdi to the stack*/
-	movl %ebx, %edx /*save ebx to first argument register*/
+	pushq %rdi
+	movl %ebx, %edi /*save ebx to first argument register*/
 	call get_a /*eax should contain just the alpha values of ebx now*/
+	popq %rdi
+	/*previously rdi, and rsi were pointers to images, but we might not need them anymore,
+	* cause now we have r10 and r11, so I'm going to use rdi and rsi for arguments to make_pixel function
+	* rdi and rsi for red and green bits. then rdx for blue bits. i'm going to have to save the value of rcx though because
+	* i need to use it for counter...
+	*/
+	
 	/*make a new pixel with 128, 128, 128, and alpha value*/
-	addl $1, %ecx /*increment by 1 for counter*/
+	movq $128, %rdi /*128 to rdi, for red bits*/
+	movq $128, %rsi /*128 to rsi for green bits*/
+	pushq %rcx /*save old value of rcx for counter*/
+	movq %rdx, %rcx /*alpha bits calculated above to rcx */
+	movq $128, %rdx /*blue bits in rdx set to 128 as well*/
+	call make_pixel /*new built pixel value should be in eax*/
+	popq %rcx /*bring back counter value*/
+	movl %eax, (%r11, %rcx, 4)/*save in calculated index*/
+	addl $1, ecx /*increment by 1 for counter*/
 	jmp .toprow_loop_start
 
 	.toprow_loop_end:
+	xorl %ecx, %ecx /*start loop again this time for the outerloop*/
+	.leftcol_loop_start:
+	cmp %r9d, %ecx /*make sure counter is less than height*/
+	jge .leftcol_loop_end /*if index is greater than height, stop*/
+	imull %r8d, %ecx /*multiply width by counter and save to eax*/
+	movl (%r10, %rcx, 4), %edi /*calculate index of the left column and save that to edi*/
+	call get_a /*alpha bits should be saved to eax now*/
+	
 
-
+	.leftcol_loop_end:
+	/*continue to BIG chunk of the program now...*/
+	/*outer loop start, then inner loop start, then inner loop end, then outer loop end.*/
 	ret
 
 /*
