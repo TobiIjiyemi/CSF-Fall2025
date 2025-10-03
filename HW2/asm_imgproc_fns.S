@@ -52,13 +52,13 @@ make_pixel:
 	movl %edi, %eax /*move resulting value to eax and return*/
 	ret
 
-	.globl is_in_elipse
-is_in_elipse:
+	.globl is_in_ellipse
+is_in_ellipse:
 
 	movq %rdx, %r8 /* set r8d = width */
 	shrq $1, %r8 /* a_diff = width/2 */
 
-	movq %rcx, %r9 /* set r9d = height */
+	movq %r10, %r9 /* set r9d = height */
 	shrq $1, %r9 /* b_diff = height/2 */
 
 	movq %rsi, %r12 /* r12 = col */
@@ -296,64 +296,60 @@ imgproc_ellipse:
 
 	/* call is_in_ellipse */
 
-	pushq %r8 /* save width */
-	pushq %r9 /* save height */
-
 	pushq %rax /* save row */
 	pushq %rcx /* save col */
+	pushq %r8 /* save width */
+	pushq %r9 /* save height */
 
 	movq %rax, %rdi /* first arguement, rows */
 	movq %rcx, %rsi /* second arguement, columns */
 
 	movq %r8, %rdx /* third arguement, width */
-	movq %r9, %rcx /* fourth arguement, height */
+	movq %r9, %r10 /* fourth arguement, height */
 
-	call is_in_elipse /* 0 if not in ellipse, 1 if in ellipse */
+	call is_in_ellipse /* 0 if not in ellipse, 1 if in ellipse */
 
 	cmpq $1, %rax /* if 1, then in ellipse, if not then skip */
-	jne .skip_pixel
 
 	popq %r9 /* restore height */
 	popq %r8 /* restore width */
 	popq %rcx /* resore col */
 	popq %rax /* restore row */
 
-	pushq %rax 
+	jne .skip_pixel /* pixel not in ellipse */
 
-	imulq %r8, %rax /* rax = row * width */
-	
-	addq %rcx, %rax /* rax = (row * width) + col */
+	movq %rax, %r10
+	imulq %r8, %r10 /* r10 = row * width */
+	addq %rcx, %r10 /* r10 = (row * width) + col */
 
-	movl (%r14, %rax, 4), %r10d /* load input pixel into r10d */
-
-	popq %rax /* restore row again for incrementing */
+	movl (%r14, %r10, 4), %r11d /* load input pixel into r11d */
 
 	pushq %r8 /* save width */
 	pushq %r9 /* save height */
 
 	/* load rgba */
-	movl %r10d, %r12d
+	movl %r11d, %r12d
 	call get_r
-	movl %eax, %r11d /* r11d = r */
+	movl %eax, %r8d /* r8d = r */
 
-	movl %r10d, %r12d
+	movl %r11d, %r12d
 	call get_g
-	movl %eax, %r13d /* r13d = g */
+	movl %eax, %r9d /* r9d = g */
 
-	movl %r10d, %r12d
+	movl %r11d, %r12d
 	call get_b
-	movl %eax, %r8d /* r8d = b */
+	movl %eax, %r10d /* r10d = b */
 
-	movl %r10d, %r12d
+	movl %r11d, %r12d
 	call get_a
-	movl %eax, %r9d /* r9d = a */
+	movl %eax, %r13d /* r13d = a */
 
-	movl %r11d, %edi
-    movl %r13d, %esi
-    movl %r8d, %edx
-    movl %r9d, %ecx
+	movl %r8d, %edi
+    movl %r9d, %esi
+    movl %r10d, %edx
+    movl %r13d, %ecx
 	call make_pixel
-	movl %eax, (%r15, %rax, 4)
+	movl %eax, (%r15, %r10, 4)
 
 	popq %r9
 	popq %r8
