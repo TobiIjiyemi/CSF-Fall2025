@@ -394,55 +394,154 @@ imgproc_ellipse:
  */
 	.globl imgproc_emboss
 imgproc_emboss:
-	movl IMAGE_WIDTH_OFFSET(%rdi), %r8d /*move width to r8*/
-	movl IMAGE_HEIGHT_OFFSET(%rsi), %r9d /*move height to r9*/
+    pushq   %r12 /*save all the callee saved registers*/
+    pushq   %r13
+    pushq   %r14
+    pushq   %r15
+    pushq   %rbx
+    movl    IMAGE_WIDTH_OFFSET(%rdi), %r8d   /* move width to r8*/
+    movl    IMAGE_HEIGHT_OFFSET(%rdi), %r9d  # move height to r9 (from input)
+    movl    %r8d, IMAGE_WIDTH_OFFSET(%rsi)   # set width of image to r8d
+    movl    %r9d, IMAGE_HEIGHT_OFFSET(%rsi)  # set height of image to r9d
+    movq    IMAGE_DATA_OFFSET(%rdi), %r10    # save data pointer to r10
+    movq    IMAGE_DATA_OFFSET(%rsi), %r11    # save other data pointer to r11
 
-	movl %r8d, IMAGE_WIDTH_OFFSET(%rsi) /*set width of image to r8d*/
-	movl %r9d, IMAGE_HEIGHT_OFFSET(%rsi) /*set height of image to r9d*/
 
-	xorl %ecx, %ecx /*start loop to go through top row of image*/
-	movq IMAGE_DATA_OFFSET(%rdi), %r10 /*save data pointer to r10*/
-	movq IMAGE_DATA_OFFSET(%rsi), %r11 /*save other data pointer to r11*/
-	.toprow_loop_start:
-	cmp %r8d, %ecx /*compare with width, for this subfunction we're only loop through the top of the iamge*/
-	jge .toprow_loop_end /*if index is greater than width, stop*/
-	movl (%r10, %rcx, 4), %ebx /*save memory at calculated location to ebx*/
-	pushq %rdi
-	movl %ebx, %edi /*save ebx to first argument register*/
-	call get_a /*eax should contain just the alpha values of ebx now*/
-	popq %rdi
-	/*previously rdi, and rsi were pointers to images, but we might not need them anymore,
-	* cause now we have r10 and r11, so I'm going to use rdi and rsi for arguments to make_pixel function
-	* rdi and rsi for red and green bits. then rdx for blue bits. i'm going to have to save the value of rcx though because
-	* i need to use it for counter...
-	*/
-	
-	/*make a new pixel with 128, 128, 128, and alpha value*/
-	movq $128, %rdi /*128 to rdi, for red bits*/
-	movq $128, %rsi /*128 to rsi for green bits*/
-	pushq %rcx /*save old value of rcx for counter*/
-	movq %rdx, %rcx /*alpha bits calculated above to rcx */
-	movq $128, %rdx /*blue bits in rdx set to 128 as well*/
-	call make_pixel /*new built pixel value should be in eax*/
-	popq %rcx /*bring back counter value*/
-	movl %eax, (%r11, %rcx, 4)/*save in calculated index*/
-	addl $1, %ecx /*increment by 1 for counter*/
-	jmp .toprow_loop_start
+    xorl    %ebx, %ebx # RBX FOR COUNTER!! j = 0 
+.toprow_loop_start:
+    cmp     %r8d, %ebx  # compare with width
+    jge     .toprow_loop_end # if index is >= width, stop
+    movl    (%r10, %rbx, 4), %edi # save memory at calculated location to edi
+    call    get_a # eax has alpha value
+    movl    $128, %edi  # 128 to edi, for red bits
+    movl    $128, %esi # 128 to esi for green bits
+    movl    %eax, %ecx  # alpha bits calculated above to ecx 
+    movl    $128, %edx # blue bits in edx set to 128 as well
+    call    make_pixel   # new pixel value is in eax
+    movl    %eax, (%r11, %rbx, 4) # save in calculated index
+    addl    $1, %ebx  # increment by 1 for counter
+    jmp     .toprow_loop_start
 
-	.toprow_loop_end:
-	xorl %ecx, %ecx /*start loop again this time for the outerloop*/
-	.leftcol_loop_start:
-	cmp %r9d, %ecx /*make sure counter is less than height*/
-	jge .leftcol_loop_end /*if index is greater than height, stop*/
-	imull %r8d, %ecx /*multiply width by counter and save to eax*/
-	movl (%r10, %rcx, 4), %edi /*calculate index of the left column and save that to edi*/
-	call get_a /*alpha bits should be saved to eax now*/
-	
+.toprow_loop_end:
+    xorl    %ebx, %ebx  # start loop for left col. i = 0
+.leftcol_loop_start:
+    cmp     %r9d, %ebx  # make sure counter is less than height
+    jge     .leftcol_loop_end  # if index is >= height, stop
+    movl    %ebx, %eax   # calculate index i * width
+    imull   %r8d, %eax
+    movq    %rax, %r12  # use 64 bit r12 for indexing into current pixel
+    movl    (%r10, %r12, 4), %edi # get pixel at [i][0]
+    call    get_a # alpha bits are in eax now
+    movl    $128, %edi # move 128 to first argumetn, red        
+    movl    $128, %esi # 128 to second argument, green
+    movl    %eax, %ecx # alpha bits to 4th argument, alpha
+    movl    $128, %edx # 128 bits to third argument, blue
+    call    make_pixel # call make pixel and newly made pixel is in eax
+    movl    %eax, (%r11, %r12, 4) # put eax into proper location, indexed by r12
+    addl    $1, %ebx # increase counter by 1
+    jmp     .leftcol_loop_start
 
-	.leftcol_loop_end:
-	/*continue to BIG chunk of the program now...*/
-	/*outer loop start, then inner loop start, then inner loop end, then outer loop end.*/
-	ret
+.leftcol_loop_end:
+    movl    $1, %r12d  # R12d IS REGISTER FOR OUTER LOOP i
+.outer_start:
+    cmp     %r9d, %r12d # if i >= height, exit
+    jge     .outer_end 
+    movl    $1, %r13d # R13d IS REGISTER FOR INNER LOOP j
+.inner_start:
+    cmp     %r8d, %r13d # make sure j < width
+    jge     .inner_end
+
+    /*calculating the current pixel index */
+    movl    %r12d, %eax             # calculate index of first pixel
+    imull   %r8d, %eax              # i * width is in eax
+    addl    %r13d, %eax             # i * width + j
+    movq    %rax, %r14              # Use 64-bit r14 for current_idx
+
+    # --- Save loop counters before they are used as scratch space ---
+    pushq   %r12
+    pushq   %r13
+
+    # --- Get and save alpha_val from current pixel ---
+    movl    (%r10, %r14, 4), %edi   # edi = current_pixel
+    call    get_a                   # get alpha_val from current pixel
+    movl    %eax, %r15d             # r15d = alpha_val
+
+    /*caluclate upper pixel index using current index - width - 1 */
+    movq    %r14, %rax # rax = current_idx
+    subq    %r8, %rax  # rax = current_idx - width
+    subq    $1, %rax # rax = upper_left_idx, same as (i - 1) (width - 1)
+
+	/*calculate red difference */
+    movl    (%r10, %rax, 4), %edi # set edi equal to the upper pixel 
+    call    get_r  # get just the red bits from the upper pixel, put into eax
+    pushq   %rax  # save red bits from upper pixel into the stack
+    movl    (%r10, %r14, 4), %edi # get the current pixel and save the value
+    call    get_r  # get the red bits value
+    popq    %rbx  # bring back red bits and put it into rbx
+    subl    %eax, %ebx  # subtract rbx from eax... we'll need to take the difference of this and turn it 
+	# into an absoulte value but I'll come back to this , ebx holds red difference
+    /*calculating the green difference*/
+    movl    (%r10, %rax, 4), %edi # we're repeating the process for the green bits
+    call    get_g # get the upper pixel's green bits and save to rax
+    pushq   %rax  # push rax unto the stack
+    movl    (%r10, %r14, 4), %edi  # reload edi with teh current pixel
+    call    get_g # get the green bits
+    popq    %r12 # and place it into r12
+    subl    %eax, %r12d # green difference is now in r12d
+    /*blue difference now */
+    movl    (%r10, %rax, 4), %edi # last time with blue bits..
+    call    get_b # get blue bits of upper
+    pushq   %rax # pushq to rax
+    movl    (%r10, %r14, 4), %edi # reload current pixel to edi
+    call    get_b # put blue bits of current to eax
+    popq    %r13 # put the value of the blue upper bits in r13
+    subl    %eax, %r13d  # blue difference is now in r13d
+	# compute maximium of three differences and save to eax
+    movl    %ebx, %eax  # eax = red_diff
+    cmpl    %r12d, %eax # compare eax with greendiff
+    cmovg   %r12d, %eax # save maximum of red and green to eax
+    cmpl    %r13d, %eax  # compare with blue diff
+    cmovg   %r13d, %eax # eax should now contain maximum difference
+
+    # section to cap maximum value between 0 and 255
+    addl    $128, %eax # add 128 to eax that contains maximum difference
+    cmpl    $0, %eax # check if under 0
+    jge     .zero_or_greater # if not under zero just continue
+    xorl    %eax, %eax # if under 0 then set eax to 0
+
+.zero_or_greater:
+    cmpl    $255, %eax # check to see if greater than ceiling of 255
+    jle     .under_equal_255 # if under or equal to 255 then skip 
+    movl    $255, %eax # if greater than 255 then set to 255.
+
+.under_equal_255:
+    movl    %eax, %edi # save eax values to edi, esi, edx, and all the other argument registers
+    movl    %eax, %esi 
+    movl    %eax, %edx 
+    movl    %r15d, %ecx # saved alpha value from r15d and place to 4th argument register
+    call    make_pixel  # create the final pixel with max pixel
+    movl    %eax, (%r11, %r14, 4) # Store pixel in output buffer
+
+    /*bring back loop counters, the computeed indexes for current and upper*/
+    popq    %r13 /*restore both loop counters for i and j*/
+    popq    %r12
+
+    addl    $1, %r13d /* increase j by 1 */
+    jmp     .inner_start
+
+.inner_end:
+    /*add 1 to i*/
+    addl    $1, %r12d
+    jmp     .outer_start
+
+.outer_end:
+	/*release all the values of callee saved registers*/
+    popq    %rbx
+    popq    %r15
+    popq    %r14
+    popq    %r13
+    popq    %r12
+    ret
 
 /*
 vim:ft=gas:
