@@ -92,14 +92,15 @@ void destroy_img( struct Image *img );
 void test_complement_basic( TestObjs *objs );
 void test_transpose_basic( TestObjs *objs );
 void test_ellipse_basic( TestObjs *objs );
+void test_is_ellipse ( TestObjs *objs );
+void test_is_in_ellipse_boundaries(TestObjs *objs);
+
 // void test_emboss_basic( TestObjs *objs );
 // TODO: add prototypes for additional test functions
 /*
 void test_get_RGBA_functions( TestObjs *objs );
 void test_make_pixel ( TestObjs *objs );
 void test_compute_index ( TestObjs *objs );
-void test_is_ellipse ( TestObjs *objs );
-void test_is_in_ellipse_boundaries(TestObjs *objs);
 void test_get_max (TestObjs *objs);
 void test_get_RGBA_2 (TestObjs *objs);
 */
@@ -119,14 +120,14 @@ int main( int argc, char **argv ) {
   TEST( test_complement_basic );
   TEST( test_transpose_basic );
   TEST( test_ellipse_basic );
+  TEST (test_is_ellipse);
+  TEST (test_is_in_ellipse_boundaries);
   // TEST( test_emboss_basic );
 
   /*
   TEST (test_get_RGBA_functions);
   TEST (test_make_pixel);
-  TEST (test_is_ellipse);
   TEST (test_compute_index );
-  TEST (test_is_in_ellipse_boundaries);
   TEST (test_get_max );
   TEST (test_get_RGBA_2);
   */
@@ -391,6 +392,36 @@ void test_emboss_basic( TestObjs *objs ) {
   destroy_img( smiley_emboss_expected );
 }
 
+void test_is_ellipse ( TestObjs *objs ) {
+
+  struct Image *img = objs->smiley;
+  int row = img->height / 2;
+  int col = img->width / 2;
+  
+  ASSERT (1 == is_in_ellipse(row, col, img->width, img->height));
+
+  row = 0;
+  col = 0;
+  ASSERT (0 == is_in_ellipse(row, col, img->width, img->height));
+}
+
+void test_is_in_ellipse_boundaries(TestObjs *objs) {
+    struct Image *img = objs->smiley;
+    uint32_t width = img->width;
+    uint32_t height = img->height;
+
+    uint32_t center_col = width / 2;
+    uint32_t center_row = height / 2;
+
+    uint32_t quarter_col = width / 4;
+    uint32_t quarter_row = height / 4;
+    ASSERT(is_in_ellipse(quarter_row, quarter_col, img->width, img->height) == 1);
+
+    ASSERT(is_in_ellipse(center_row, center_col, img->width, img->height) == 1);
+    ASSERT(is_in_ellipse(0, 0, img->width, img->height) == 0);
+    ASSERT(is_in_ellipse(height - 1, width - 1, img->width, img->height) == 0);
+}
+
 
 /*
 
@@ -464,33 +495,6 @@ struct Image *img = objs->smiley;
 int index = compute_index(img, 2, 3);
 ASSERT (index == 2 * img->width + 3);
 }
-
-void test_is_ellipse ( TestObjs *objs ) {
-
-  struct Image *img = objs->smiley;
-  int row = (img->height / 2) + 1;
-  int col = (img->width / 2) + 1;
-  ASSERT (1 == is_in_ellipse(img, row, col));
-
-  row = 0;
-  col = 0;
-  ASSERT (0 == is_in_ellipse(img, row, col));
-}
-
-void test_is_in_ellipse_boundaries(TestObjs *objs) {
-    struct Image *img = objs->smiley;
-    uint32_t width = img->width;
-    uint32_t height = img->height;
-
-    int32_t center_col = width / 2;
-    int32_t center_row = height / 2;
-
-    ASSERT(is_in_ellipse(img, center_row, width - 1) == 1);
-    ASSERT(is_in_ellipse(img, height - 1, center_col) == 1);
-    ASSERT(is_in_ellipse(img, 0, 0) == 0);
-    ASSERT(is_in_ellipse(img, height - 1, width - 1) == 0);
-}
-
 
 void test_get_max (TestObjs *objs) {
   int red_diff = -233;

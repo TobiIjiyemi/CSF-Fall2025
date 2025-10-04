@@ -55,8 +55,7 @@ make_pixel:
 	.globl is_in_ellipse
 is_in_ellipse:
 
-	pushq %rbp
-	pushq %rbx
+	pushq %rbx /* stores row */
 
 	movq %rdx, %r8 /* set r8 = width */
 	shrq $1, %r8 /* a_diff = width/2 */
@@ -98,18 +97,17 @@ is_in_ellipse:
 	addq %r10, %r11 /* check_x + check_y */
 	cmpq $10000, %r11 /* check_x + check_y <= 10000 */
 
-	jg .outside_ellipse
+	jg .Loutside_ellipse
 
-	.inside_ellipse:
+	.Linside_ellipse:
 	movq $1, %rax /* 1 if true */
-	jmp .epilogue
+	jmp .Lepilogue
 
-	.outside_ellipse:
+	.Loutside_ellipse:
 	movq $0, %rax /* 0 if false */
 
-	.epilogue:
+	.Lepilogue:
 	popq %rbx
-	popq %rbp
 	ret
 
 
@@ -288,6 +286,15 @@ imgproc_ellipse:
 	/* TODO: implement */
 	
 	/* prologue: pushing callee saved registers being used */
+	/*
+	* Register use:
+	*   %rbp - row counter
+	*	%rbx - index
+	*	%r12 - input image width
+	*   %r13 - input image height
+	*   %r14d - input_img->data
+	*   %r15d - output_img->data
+	*/
 	pushq %rbp
 	pushq %rbx	
 	pushq %r12
@@ -306,15 +313,15 @@ imgproc_ellipse:
 
 	xorq %rbp, %rbp /* i = 0 counter for outer loop */	
 	
-	.row_loop_start:
+	.Lrow_loop_start:
 	cmpq %r13, %rbp /* comparing i to height, i < height : height - rbp */
-	jge .row_loop_end /* if i >= height, then end loop */
+	jge .Lrow_loop_end /* if i >= height, then end loop */
 
 	xorq %rcx, %rcx /* count for inner loop */
 	
-	.column_loop_start:
+	.Lcolumn_loop_start:
 	cmpq %r12, %rcx /* comparing j to width, j < width */
-	jge .column_loop_end /* if j >= width, then end inner loop */
+	jge .Lcolumn_loop_end /* if j >= width, then end inner loop */
 
 	/* call is_in_ellipse */
 	pushq %rcx
@@ -331,7 +338,7 @@ imgproc_ellipse:
 
 	popq %rcx /* resore col */
 
-	jne .skip_pixel /* pixel not in ellipse */
+	jne .Lskip_pixel /* pixel not in ellipse */
 
 	movq %rbp, %rbx
 	imulq %r12, %rbx /* rbx = row * width */
@@ -341,15 +348,15 @@ imgproc_ellipse:
 
 	movl %r11d, (%r15, %rbx, 4) /* output pixel = input pixel */
 
-	.skip_pixel:
+	.Lskip_pixel:
 	incq %rcx /* j++ */
-	jmp .column_loop_start
+	jmp .Lcolumn_loop_start
 	
-	.column_loop_end:
+	.Lcolumn_loop_end:
 	incq %rbp /* i++ */
-	jmp .row_loop_start
+	jmp .Lrow_loop_start
 
-	.row_loop_end:
+	.Lrow_loop_end:
 	/* popping callee saved registers that were used */
 	popq %r15
 	popq %r14
