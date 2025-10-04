@@ -56,7 +56,6 @@ make_pixel:
 is_in_ellipse:
 
 	pushq %rbp
-	movq %rsp, %rbp
 	pushq %rbx
 
 	movq %rdx, %r8 /* set r8 = width */
@@ -77,7 +76,7 @@ is_in_ellipse:
 	movq %r8, %r10
 	imulq %r10, %r10 /* a_diff * a_diff */
 	
-	xorq %rdx, %rdx
+	xorq %rdx, %rdx /* clearing upper bits */
 	
 	idivq %r10 /* check_x = (10000 * (dist_x * dist_x)) / (a_diff * a_diff); */
 	movq %rax, %r10 /* check_x */
@@ -90,7 +89,7 @@ is_in_ellipse:
 	
 	movq %rbx, %rax
 
-	xorq %rdx, %rdx
+	xorq %rdx, %rdx /* clearing upper bits */
 
 	idivq %r11 /* check_y = (10000 * (dist_y * dist_y)) / (b_diff * b_diff); */
 	
@@ -102,11 +101,11 @@ is_in_ellipse:
 	jg .outside_ellipse
 
 	.inside_ellipse:
-	movq $1, %rax
+	movq $1, %rax /* 1 if true */
 	jmp .epilogue
 
 	.outside_ellipse:
-	movq $0, %rax
+	movq $0, %rax /* 0 if false */
 
 	.epilogue:
 	popq %rbx
@@ -340,14 +339,14 @@ imgproc_ellipse:
 
 	movl (%r14, %rbx, 4), %r11d /* load input pixel into r11d */
 
-	movl %r11d, (%r15, %rbx, 4)
+	movl %r11d, (%r15, %rbx, 4) /* output pixel = input pixel */
 
 	.skip_pixel:
-	incq %rcx
+	incq %rcx /* j++ */
 	jmp .column_loop_start
 	
 	.column_loop_end:
-	incq %rbp
+	incq %rbp /* i++ */
 	jmp .row_loop_start
 
 	.row_loop_end:
