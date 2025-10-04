@@ -14,29 +14,30 @@
  * Don't forget to use the .globl directive to make
  * them visible to the test code.
  */
-	.globl get_a
-/*function to get alpha value*/
 	.globl get_r
 get_r:
-	movl %edx, %eax /*move data directly to return register*/
+	movl %edi, %eax /*move data directly to return register*/
 	shrl $24, %eax /*shift right 24 bits, clear the other bits and move red data into the lowest bits*/
 	ret
 
 	.globl get_g
 get_g:
-	movl %edx, %eax /*move data directly to return register*/
+	movl %edi, %eax /*move data directly to return register*/
 	shll $8, %eax
 	shrl $24, %eax 
 	ret
 
 	.globl get_b
 get_b:
-	movl %edx, %eax /*move data direclty to return register*/
+	movl %edi, %eax /*move data direclty to return register*/
 	shll $16, %eax /*mask just the blue bits*/
 	shrl $24, %eax /*shift by 8 bits to move to lowest bits*/
 	ret
+	
+	/*function to get alpha value*/
+	.globl get_a
 get_a:
-	movl %edx, %eax /*move data directly to return register*/
+	movl %edi, %eax /*move data directly to return register*/
 	shll $24, %eax /*mask lower bits of eax and return the result*/
 	shrl $24, %eax
 	ret

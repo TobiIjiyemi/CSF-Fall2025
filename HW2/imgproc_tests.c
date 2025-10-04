@@ -92,18 +92,15 @@ void destroy_img( struct Image *img );
 void test_complement_basic( TestObjs *objs );
 void test_transpose_basic( TestObjs *objs );
 void test_ellipse_basic( TestObjs *objs );
-void test_is_ellipse ( TestObjs *objs );
-void test_is_in_ellipse_boundaries(TestObjs *objs);
+
 
 // void test_emboss_basic( TestObjs *objs );
 // TODO: add prototypes for additional test functions
-/*
+void test_is_ellipse ( TestObjs *objs );
+void test_is_in_ellipse_boundaries(TestObjs *objs);
 void test_get_RGBA_functions( TestObjs *objs );
 void test_make_pixel ( TestObjs *objs );
-void test_compute_index ( TestObjs *objs );
-void test_get_max (TestObjs *objs);
 void test_get_RGBA_2 (TestObjs *objs);
-*/
 
 
 int main( int argc, char **argv ) {
@@ -124,13 +121,9 @@ int main( int argc, char **argv ) {
   TEST (test_is_in_ellipse_boundaries);
   // TEST( test_emboss_basic );
 
-  /*
   TEST (test_get_RGBA_functions);
   TEST (test_make_pixel);
-  TEST (test_compute_index );
-  TEST (test_get_max );
   TEST (test_get_RGBA_2);
-  */
 
 
   TEST_FINI();
@@ -422,9 +415,6 @@ void test_is_in_ellipse_boundaries(TestObjs *objs) {
     ASSERT(is_in_ellipse(height - 1, width - 1, img->width, img->height) == 0);
 }
 
-
-/*
-
 void test_get_RGBA_functions ( TestObjs *objs ) {
   uint32_t pixel = objs->smiley->data[2];
 
@@ -463,19 +453,20 @@ void test_get_RGBA_2 (TestObjs *objs) {
   ASSERT(get_r(black_pixel) == 0);
   ASSERT(get_g(black_pixel) == 0);
   ASSERT(get_b(black_pixel) == 0);
-  ASSERT(get_a(black_pixel) == 255);
+  ASSERT(get_a(black_pixel) == 0xFF);
 
   uint32_t white_pixel = 0xFFFFFF00;
-  ASSERT(get_r(white_pixel) == 255);
-  ASSERT(get_g(white_pixel) == 255);
-  ASSERT(get_b(white_pixel) == 255);
+  ASSERT(get_r(white_pixel) == 0xFF);
+  ASSERT(get_g(white_pixel) == 0xFF);
+  ASSERT(get_b(white_pixel) == 0xFF);
   ASSERT(get_a(white_pixel) == 0);
 
-  uint32_t mixed_pixel = 0x1A2B3C4D;
-  ASSERT(get_r(mixed_pixel) == 0x1A);
-  ASSERT(get_g(mixed_pixel) == 0x2B);
-  ASSERT(get_b(mixed_pixel) == 0x3C);
+  uint32_t mixed_pixel = 0x1A2B3C4D; 
+  ASSERT(get_r(mixed_pixel) == 0x1A); 
+  ASSERT(get_g(mixed_pixel) == 0x2B); 
+  ASSERT(get_b(mixed_pixel) == 0x3C); 
   ASSERT(get_a(mixed_pixel) == 0x4D);
+
 }
 
 void test_make_pixel ( TestObjs *objs ) {
@@ -490,36 +481,3 @@ void test_make_pixel ( TestObjs *objs ) {
   ASSERT (pixel == data);
 }
 
-void test_compute_index ( TestObjs *objs ) {
-struct Image *img = objs->smiley;
-int index = compute_index(img, 2, 3);
-ASSERT (index == 2 * img->width + 3);
-}
-
-void test_get_max (TestObjs *objs) {
-  int red_diff = -233;
-  int green_diff = 50;
-  int blue_diff = 100;
-
-  ASSERT (-233 == get_max(red_diff, blue_diff, green_diff));
-
-  red_diff = 100;
-  green_diff = -100;
-  blue_diff = -100;
-
-  ASSERT (100 == get_max(red_diff, blue_diff, green_diff));
-
-  red_diff = -3;
-  green_diff = -100;
-  blue_diff = 100;
-
-  ASSERT (-100 == get_max(red_diff, blue_diff, green_diff));
-
-  red_diff = -10;
-  green_diff = 10;
-  blue_diff = -11;
-
-  ASSERT (-11 == get_max(red_diff, blue_diff, green_diff));
-}
-
-*/

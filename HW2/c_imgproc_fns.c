@@ -53,11 +53,8 @@ uint32_t make_pixel(uint32_t r, uint32_t g, uint32_t b, uint32_t a)
   return pixel;
 }
 
-int is_in_ellipse(struct Image *img, int32_t row, int32_t col)
+int is_in_ellipse(uint32_t row, uint32_t col, uint32_t width, uint32_t height)
 {
-  uint32_t width = img->width;
-  uint32_t height = img->height;
-
   int a_diff = width / 2;
   int b_diff = height / 2;
 
@@ -193,7 +190,7 @@ void imgproc_ellipse(struct Image *input_img, struct Image *output_img)
   {
     for (uint32_t col = 0; col < width; col++)
     {
-      if (is_in_ellipse(input_img, row, col) == 1)
+      if (is_in_ellipse(row, col, width, height) == 1)
       {
         uint32_t pixel = input_img->data[compute_index(input_img, row, col)];
 
