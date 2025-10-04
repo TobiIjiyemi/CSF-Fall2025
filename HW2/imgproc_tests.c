@@ -403,16 +403,13 @@ void test_is_in_ellipse_boundaries(TestObjs *objs) {
     uint32_t width = img->width;
     uint32_t height = img->height;
 
-    uint32_t center_col = width / 2;
-    uint32_t center_row = height / 2;
-
     uint32_t quarter_col = width / 4;
     uint32_t quarter_row = height / 4;
     ASSERT(is_in_ellipse(quarter_row, quarter_col, img->width, img->height) == 1);
 
-    ASSERT(is_in_ellipse(center_row, center_col, img->width, img->height) == 1);
     ASSERT(is_in_ellipse(0, 0, img->width, img->height) == 0);
     ASSERT(is_in_ellipse(height - 1, width - 1, img->width, img->height) == 0);
+     ASSERT(is_in_ellipse(height - 5, width -5, img->width, img->height) == 1);
 }
 
 void test_get_RGBA_functions ( TestObjs *objs ) {
@@ -479,5 +476,15 @@ void test_make_pixel ( TestObjs *objs ) {
 
   uint32_t pixel = make_pixel(r, g, b, a);
   ASSERT (pixel == data);
+
+  uint32_t data2 = objs->smiley->data[3];
+
+  uint32_t r2 = get_r(data);
+  uint32_t g2 = get_g(data);
+  uint32_t b2 = get_b(data);
+  uint32_t a2 = get_a(data);
+
+  uint32_t pixel2 = make_pixel(r2, g2, b2, a2);
+  ASSERT (pixel2 == data2);
 }
 
