@@ -92,9 +92,13 @@ void destroy_img( struct Image *img );
 void test_complement_basic( TestObjs *objs );
 void test_transpose_basic( TestObjs *objs );
 void test_ellipse_basic( TestObjs *objs );
+<<<<<<< HEAD
 
 
 // void test_emboss_basic( TestObjs *objs );
+=======
+void test_emboss_basic( TestObjs *objs );
+>>>>>>> dde876e (embossed finished)
 // TODO: add prototypes for additional test functions
 void test_is_ellipse ( TestObjs *objs );
 void test_is_in_ellipse_boundaries(TestObjs *objs);
@@ -117,9 +121,13 @@ int main( int argc, char **argv ) {
   TEST( test_complement_basic );
   TEST( test_transpose_basic );
   TEST( test_ellipse_basic );
+<<<<<<< HEAD
   TEST (test_is_ellipse);
   TEST (test_is_in_ellipse_boundaries);
   // TEST( test_emboss_basic );
+=======
+  TEST( test_emboss_basic );
+>>>>>>> dde876e (embossed finished)
 
   TEST (test_get_RGBA_functions);
   TEST (test_make_pixel);
