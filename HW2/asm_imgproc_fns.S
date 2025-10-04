@@ -290,7 +290,6 @@ imgproc_ellipse:
 	
 	/* prologue: pushing callee saved registers being used */
 	pushq %rbp
-	movq %rsp, %rbp
 	pushq %rbx	
 	pushq %r12
 	pushq %r13
@@ -306,10 +305,10 @@ imgproc_ellipse:
 	movq IMAGE_DATA_OFFSET(%rdi), %r14 /* r14 = input_img->data */
 	movq IMAGE_DATA_OFFSET(%rsi), %r15 /* r15 = output_img->data */
 
-	xorq %rax, %rax /* i = 0 counter for outer loop */	
+	xorq %rbp, %rbp /* i = 0 counter for outer loop */	
 	
 	.row_loop_start:
-	cmpq %r13, %rax /* comparing i to height, i < height : height - rax */
+	cmpq %r13, %rbp /* comparing i to height, i < height : height - rbp */
 	jge .row_loop_end /* if i >= height, then end loop */
 
 	xorq %rcx, %rcx /* count for inner loop */
@@ -319,11 +318,9 @@ imgproc_ellipse:
 	jge .column_loop_end /* if j >= width, then end inner loop */
 
 	/* call is_in_ellipse */
+	pushq %rcx
 
-	pushq %rax /* save row */
-	pushq %rcx /* save col */
-
-	movq %rax, %rdi /* first arguement, rows */
+	movq %rbp, %rdi /* first arguement, rows */
 	movq %rcx, %rsi /* second arguement, columns */
 
 	movq %r12, %rdx /* third arguement, width */
@@ -334,51 +331,23 @@ imgproc_ellipse:
 	cmpq $1, %rax /* if 1, then in ellipse, if not then skip */
 
 	popq %rcx /* resore col */
-	popq %rax /* restore row */
 
 	jne .skip_pixel /* pixel not in ellipse */
 
-	movq %rax, %rbx
+	movq %rbp, %rbx
 	imulq %r12, %rbx /* rbx = row * width */
 	addq %rcx, %rbx /* r10 = (row * width) + col */
 
 	movl (%r14, %rbx, 4), %r11d /* load input pixel into r11d */
 
-	pushq %rcx
-
-	/* load rgba */
-	movl %r11d, %edx
-	call get_r
-	movl %eax, %r8d /* r8d = r */
-
-	movl %r11d, %edx
-	call get_g
-	movl %eax, %r9d /* r9d = g */
-
-	movl %r11d, %edx
-	call get_b
-	movl %eax, %r10d /* r10d = b */
-
-	movl %r11d, %edx
-	call get_a
-	movl %eax, %r11d /* r11d = a */
-
-	movl %r8d, %edi
-    movl %r9d, %esi
-    movl %r10d, %edx
-    movl %r11d, %ecx
-	
-	call make_pixel
-	movl %eax, (%r15, %rbx, 4)
-	
-	popq %rcx /* restore col counter */
+	movl %r11d, (%r15, %rbx, 4)
 
 	.skip_pixel:
 	incq %rcx
 	jmp .column_loop_start
 	
 	.column_loop_end:
-	incq %rax
+	incq %rbp
 	jmp .row_loop_start
 
 	.row_loop_end:
