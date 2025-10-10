@@ -30,7 +30,8 @@ get_g:
 	.globl get_b
 get_b:
 	movl %edi, %eax /*move data direclty to return register*/
-	shll $16, %eax /*mask just the blue bits*/
+	shll $16, %eax /*mask j
+	ust the blue bits*/
 	shrl $24, %eax /*shift by 8 bits to move to lowest bits*/
 	ret
 	
@@ -408,7 +409,11 @@ imgproc_emboss:
     pushq   %r15
     pushq   %rbx
     movl    IMAGE_WIDTH_OFFSET(%rdi), %r8d   /* move width to r8*/
+<<<<<<< HEAD
     movslq  %r8d, %r8 /*extend sign bit into 64 bits*/
+=======
+	movslq  %r8d, %r8 /*extend sign bit into 64 bits*/
+>>>>>>> 60d9c1f8a395ae235011e123515d906f519521f7
     movl    IMAGE_HEIGHT_OFFSET(%rdi), %r9d  # move height to r9 (from input)
     movl    %r8d, IMAGE_WIDTH_OFFSET(%rsi)   # set width of image to r8d
     movl    %r9d, IMAGE_HEIGHT_OFFSET(%rsi)  # set height of image to r9d
@@ -486,6 +491,7 @@ imgproc_emboss:
     movl    (%r10, %r14, 4), %edi # get the current pixel and save the value
     call    get_r  # get the red bits value
     popq    %rbx  # bring back red bits and put it into rbx
+<<<<<<< HEAD
     subl    %eax, %ebx  # subtract rbx from eax... we'll need to take the difference of this and turn it
     # into an absoulte value
 
@@ -493,6 +499,15 @@ imgproc_emboss:
     movq %r14, %rax
     subq %r8, %rax
     subq $1, %rax
+=======
+    subl    %eax, %ebx  # subtract rbx from eax... we'll need to take the difference of this and turn it 
+	# into an absoulte value
+
+    /*calculating the green difference*/
+	movq %r14, %rax
+	subq %r8, %rax
+	subq $1, %rax
+>>>>>>> 60d9c1f8a395ae235011e123515d906f519521f7
     movl    (%r10, %rax, 4), %edi # we're repeating the process for the green bits
     call    get_g # get the upper pixel's green bits and save to rax
     pushq   %rax  # push rax unto the stack
@@ -500,12 +515,21 @@ imgproc_emboss:
     call    get_g # get the green bits
     popq    %rcx # and place it into rcx
     subl    %eax, %ecx # green difference is now in r12d
+<<<<<<< HEAD
     movl %ecx, %r12d
    
     /*blue difference now */
     movq %r14, %rax
     subq %r8, %rax
     subq $1, %rax
+=======
+	movl %ecx, %r12d
+	
+    /*blue difference now */
+	movq %r14, %rax
+	subq %r8, %rax
+	subq $1, %rax
+>>>>>>> 60d9c1f8a395ae235011e123515d906f519521f7
     movl    (%r10, %rax, 4), %edi # last time with blue bits..
     call    get_b # get blue bits of upper
     pushq   %rax # pushq to rax
@@ -513,6 +537,7 @@ imgproc_emboss:
     call    get_b # put blue bits of current to eax
     popq    %rcx # put the value of the blue upper bits in rcx
     subl    %eax, %ecx  # blue difference is now in r13d
+<<<<<<< HEAD
     movl %ecx, %r13d /*move to r13d*/
     movl %ebx, %eax /*move red difference to eax*/
 
@@ -550,6 +575,45 @@ imgproc_emboss:
     movl %r13d, %eax /*update current winner difference to blue difference*/
 
     .skip_blue_update:
+=======
+	movl %ecx, %r13d /*move to r13d*/
+	movl %ebx, %eax /*move red difference to eax*/
+
+	movl %eax, %ecx /*move eax to ecx*/
+	testl %ecx, %ecx /*see the sign of ecx*/
+	jns .red_diff_abs_done /*if positve then just skip, no need to abs*/
+	negl %ecx /*negatte to make ecx positive... ecx should just be pos red diff rn*/
+
+	.red_diff_abs_done:
+	movl %r12d, %edx /*move green differnce bits to edx*/
+	testl %edx, %edx /*test sign of green diff*/
+	jns .green_diff_abs_done /*if green diff is positive skip to comparison*/
+	negl %edx /*make difference positive in temporary var*/
+	
+	.green_diff_abs_done:
+	cmpl %ecx, %edx /*compare green and red difference */
+	jle .skip_green /*skip next line if red is winner*/
+	movl %r12d, %eax /*if red isn't the winner then move original green difference to eax*/
+
+	.skip_green:
+	movl %eax, %ecx /*move eax to ecx*/
+	testl %ecx, %ecx /*run same operations where we turn it to positive*/
+	jns .current_winner_abs_done
+	negl %ecx /*negative if negative to make positive*/
+
+	.current_winner_abs_done:
+	movl %r13d, %edx /*take blue difference and put in edx*/
+	testl %edx, %edx /*test to see sign*/
+	jns .blue_diff_abs_done /*if signi s positive skip next line*/
+	negl %edx /*negative to make positive*/
+
+	.blue_diff_abs_done:
+	cmpl %ecx, %edx /*compare current max diff with blue diff*/
+	jle .skip_blue_update /*if current max still wins then skip next line*/
+	movl %r13d, %eax /*update current winner difference to blue difference*/
+
+	.skip_blue_update:
+>>>>>>> 60d9c1f8a395ae235011e123515d906f519521f7
     # section to cap maximum value between 0 and 255
     addl    $128, %eax # add 128 to eax that contains maximum difference
     cmpl    $0, %eax # check if under 0
