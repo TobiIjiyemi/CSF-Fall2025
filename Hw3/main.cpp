@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include <cstdint>
+#include <cmath>
 
 using namespace std;
 
@@ -52,12 +53,32 @@ void check_combinations(int num_sets, int num_blocks) {
   }
 }
 
+void process_trace(Cache &cache, char operation, uint32_t address, int num_sets, int num_blocks, int num_bytes, string write_allocate_action, string write_through_or_back, string eviction) {
+
+  int block_offset_size = log2(num_bytes); // the lowest n bits 
+  int index_size = log2(num_sets); // the next n bits
+
+  // extract the lowest n bits
+  uint32_t block_offset_isolate = (1 << block_offset_size) - 1; // Isolate the bottom n bits
+  uint32_t block_offset = address & block_offset_isolate;
+
+  uint32_t index_isolate = (1 << index_size) - 1; // Isolate the next n bits
+  uint32_t index = (address >> block_offset_size) & index_isolate;
+
+  uint32_t tag = address >> (block_offset_size + index_size);
+
+  Set &set = cache.sets[index]; 
+
+
+
+}
+
 Cache create_cache(int num_sets, int num_blocks) {
   Cache cache;
-  cache.sets.resize(num_sets);
+  cache.sets.resize(num_sets); // creates num_sets sets
 
-  for (int i = 0; i < num_blocks; i++) {
-    cache.sets[i].slots.resize(num_blocks);
+  for (int i = 0; i < num_sets; i++) {
+    cache.sets[i].slots.resize(num_blocks); // each set has num_blocls blocks/slots
     for (int j = 0; j < num_blocks; j++) {
       cache.sets[i].slots[j].valid = true;
       cache.sets[i].slots[j].dirty = false;
@@ -93,6 +114,18 @@ int main( int argc, char **argv ) {
 
   // Create cache
   Cache cache = create_cache(num_sets, num_blocks);
+
+  // Process memory access trace
+
+  char operation;
+  uint32_t address;
+  // Extract the 'l' or 's' operation and the address
+  while (cin >> operation >> hex >> address) {
+    process_trace(cache, operation, address, num_sets, num_blocks, num_bytes, 
+                  write_allocate_action, write_through_or_back, eviction);
+  }
+
+
 
   return 0;
 }
