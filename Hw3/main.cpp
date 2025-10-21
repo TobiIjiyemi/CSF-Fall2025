@@ -47,13 +47,17 @@ void check_combinations(int num_sets, int num_blocks) {
   if (num_blocks == 1) {
     //direct-mapped
   } else if (num_sets == 1) {
-    //ully associative
+    //fully associative
   } else {
     //set-associative
   }
 }
 
-void process_trace(Cache &cache, char operation, uint32_t address, int num_sets, int num_blocks, int num_bytes, string write_allocate_action, string write_through_or_back, string eviction) {
+/*goal of the function: process each of the access or loads, calculate and return process cycles to 
+perform operation.
+*/
+int process_trace(Cache &cache, char operation, uint32_t address, int num_sets, int num_blocks, 
+  int num_bytes, string write_allocate_action, string write_through_or_back, string eviction) {
 
   int block_offset_size = log2(num_bytes); // the lowest n bits 
   int index_size = log2(num_sets); // the next n bits
@@ -67,10 +71,17 @@ void process_trace(Cache &cache, char operation, uint32_t address, int num_sets,
 
   uint32_t tag = address >> (block_offset_size + index_size);
 
-  Set &set = cache.sets[index]; 
+  Set &set = cache.sets[index];
+  int i = 0; 
+  while (i < set.slots.size()) {
+    if (set.slots[i].tag == tag) {
+      
+    }
+    i++;
+  }
 
-
-
+  //default value for processor cycles for now
+  return 0;
 }
 
 Cache create_cache(int num_sets, int num_blocks) {
@@ -119,13 +130,12 @@ int main( int argc, char **argv ) {
 
   char operation;
   uint32_t address;
+  int process_cycles = 0;
   // Extract the 'l' or 's' operation and the address
   while (cin >> operation >> hex >> address) {
-    process_trace(cache, operation, address, num_sets, num_blocks, num_bytes, 
+    process_cycles += process_trace(cache, operation, address, num_sets, num_blocks, num_bytes, 
                   write_allocate_action, write_through_or_back, eviction);
   }
-
-
 
   return 0;
 }
