@@ -73,13 +73,31 @@ int process_trace(Cache &cache, char operation, uint32_t address, int num_sets, 
 
   Set &set = cache.sets[index];
   int i = 0; 
+  bool found = false;
   while (i < set.slots.size()) {
     if (set.slots[i].tag == tag) {
-      
+      found = true;
+      break;
     }
     i++;
   }
 
+  if (found) {
+    /*
+    found for load: perform tag updates 
+    */
+  } else {
+    /*if not found, then different things to do depending on operation:
+    if not found for a load then it'll be 100 p cycles for every 4 bytes for main memeroy access,
+    then load into cache. break into subfunctions. function for loading into cache taking parameters 
+    (cache, set index, slot index). so we can just call it rather than putting in this body
+
+    if not found for a store then.. 
+      if no write allcoate then just don't modify anything and it falls to the wayside
+      if write allocate then access memory into the cache and then store (100 + 1) per 4 bytes store operation
+    
+    */
+  }
   //default value for processor cycles for now
   return 0;
 }
