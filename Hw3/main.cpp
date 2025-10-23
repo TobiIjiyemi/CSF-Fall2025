@@ -61,26 +61,24 @@ void check_combinations(int num_sets, int num_blocks) {
   }
 }
 
-void load_found(Set &set, uint32_t slot_index, uint32_t tag, int TIMESTAMP) {
+void load_found(Set &set, uint32_t slot_index, uint32_t tag) {
   if (set.slots[slot_index].valid) {
     
   }
-  set.slots[slot_index].load_ts = TIMESTAMP;
+  set.slots[slot_index].load_ts = global_time;
 }
 
-void load_miss(Set &set, uint32_t slot_index, uint32_t tag, int TIMESTAMP) {
-//evictions  
+void load_miss(Set &set, uint32_t slot_index, uint32_t tag) {
+  //evictions
+
+
 }
 
 void store_found(Set &set, uint32_t slot_index, char wt_or_wb, uint32_t tag, int TIMESTAMP) {
 
 }
 
-void store_miss(Set &set, uint32_t slot_index, char nw_or_wa, uint32_t tag, int TIMESTAMP) {
-
-}
-
-void perform_eviction_lru(Set &set) {
+void store_miss(Set &set, uint32_t slot_index, char nw_or_wa, uint32_t tag) {
 
 }
 
@@ -90,7 +88,6 @@ void perform_eviction_fifo(Set &set) {
 }
 
 void update_counters(Set &set, char operation, int hit_slot, string write_through_or_back) {
-
   if (operation == 'l') { 
     total_loads++;
     if (hit_slot != -1) {
@@ -98,34 +95,37 @@ void update_counters(Set &set, char operation, int hit_slot, string write_throug
       set.slots[hit_slot].access_ts = global_time;
       total_cycles++;
     } else {
-      load_misses++;
-      // Handle
-
+      load_misses++;    
     }
-   } else if (operation == 's') {
-    total_stores++;
-    if (hit_slot != -1) {
-      store_hits++;
-      set.slots[hit_slot].access_ts = global_time;
-      if (write_through_or_back == "write-through") {
-        // write to cache and memory
-      } else {
-        // write to cache only
-        set.slots[hit_slot].dirty = true;
-      }
-    } else {
-      store_misses++;
-      // Handle
+  } else if (operation == 's') {
+  total_stores++;
+  if (hit_slot != -1) {
+    store_hits++;
+    set.slots[hit_slot].access_ts = global_time;
+    // call to store_found
+    }
+  } else {
+    store_misses++;
+  }
+}
+
+int find_lru(Set &set) {
+  int index = 0;
+  uint32_t current_oldest = set.slots[0].access_ts;
+  for (int i = 1; i < set.slots.size(); i++ ) {
+    if(set.slots[i].access_ts < current_oldest) {
+      current_oldest = set.slots[i].access_ts;
+      index = i;
     }
   }
-
+  return index;
 }
 
 /*goal of the function: process each of the access or loads, calculate and return process cycles to 
 perform operation.
 */
 int process_trace(Cache &cache, char operation, uint32_t address, int num_sets, int num_blocks, 
-  int num_bytes, string write_allocate_action, string write_through_or_back, string eviction, int TIMESTAMP) {
+  int num_bytes, string write_allocate_action, string write_through_or_back, string eviction) {
 
   int block_offset_size = log2(num_bytes); // the lowest n bits 
   int index_size = log2(num_sets); // the next n bits
@@ -153,16 +153,28 @@ int process_trace(Cache &cache, char operation, uint32_t address, int num_sets, 
 
   global_time++;
 
+  // Tobi this handles the scenrios you were describing with if (found), some of the functions you outlined for the different scenarios are being called here
   update_counters(set, operation, hit_slot, write_through_or_back);
 
-  if (found) {
-    /* evictions only happen during hits, I think
+  // then I call more of the functions you created here
+  if (hit_slot == -1) {
+    int slot_to_replace = find_lru(set);
+    if (operation == 'l') {
+      load_miss(set, slot_to_replace, tag);
+    } else {
+      store_miss(set, slot_to_replace, tag);
+    }
+  }
+  
+  //if found
+  /* evictions only happen during hits, I think
     found for load: just calculate process cycles
     found for store:
     1.write-through: 
     2.write_back: mark as dirty and only write when block is evicted
     */
-  } else {
+   
+    // else
     /*if not found, then different things to do depending on operation:
     if not found for a load then it'll be 100 p cycles for every 4 bytes for main memeroy access,
     then load into cache. break into subfunctions. function for loading into cache taking parameters 
@@ -172,8 +184,8 @@ int process_trace(Cache &cache, char operation, uint32_t address, int num_sets, 
       if no write allcoate then just don't modify anything and it falls to the wayside
       if write allocate then access memory into the cache and then store (100 + 1) per 4 bytes store operation
     */
-  }
   //default value for processor cycles for now
+
   return 0;
 }
 
@@ -228,7 +240,7 @@ int main( int argc, char **argv ) {
   // Extract the 'l' or 's' operation and the address
   while (cin >> operation >> hex >> address) {
     process_cycles += process_trace(cache, operation, address, num_sets, num_blocks, num_bytes, 
-                  write_allocate_action, write_through_or_back, eviction, TIME_STAMP);
+                  write_allocate_action, write_through_or_back, eviction);
   }
 
   return 0;
