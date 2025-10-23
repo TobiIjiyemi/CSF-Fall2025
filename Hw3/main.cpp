@@ -21,6 +21,14 @@ struct Cache {
 };
 
 uint32_t global_time = 0;
+uint32_t total_loads = 0;
+uint32_t total_stores = 0;
+uint32_t load_hits = 0;
+uint32_t load_misses = 0;
+uint32_t store_hits = 0;
+uint32_t store_misses = 0;
+uint32_t total_cycles = 0;
+
 
 //Helper Functions
 int valid_parameters(int num_sets, int num_blocks, int num_bytes, string write_allocate_action, string write_through_or_back) {
@@ -30,7 +38,7 @@ int valid_parameters(int num_sets, int num_blocks, int num_bytes, string write_a
     return 1;
   }
 
-  if ((num_sets & (num_sets - 1)) != 0 || (num_blocks & (num_blocks - 1) != 0) || (num_bytes & (num_bytes - 1) != 0)) {
+  if ((num_sets & (num_sets - 1)) != 0 || (num_blocks & (num_blocks - 1)) != 0 || (num_bytes & (num_bytes - 1)) != 0) {
     std::cerr << "The number of sets in the cache or the number of blocks in each set or the number bytes in each block is not a power of 2" << endl;
     return 1;
   }
@@ -80,6 +88,39 @@ void perform_eviction_lru(Set &set) {
 void perform_eviction_fifo(Set &set) {
 
 }
+
+void update_counters(Set &set, char operation, int hit_slot, string write_through_or_back) {
+
+  if (operation == 'l') { 
+    total_loads++;
+    if (hit_slot != -1) {
+      load_hits++;
+      set.slots[hit_slot].access_ts = global_time;
+      total_cycles++;
+    } else {
+      load_misses++;
+      // Handle
+
+    }
+   } else if (operation == 's') {
+    total_stores++;
+    if (hit_slot != -1) {
+      store_hits++;
+      set.slots[hit_slot].access_ts = global_time;
+      if (write_through_or_back == "write-through") {
+        // write to cache and memory
+      } else {
+        // write to cache only
+        set.slots[hit_slot].dirty = true;
+      }
+    } else {
+      store_misses++;
+      // Handle
+    }
+  }
+
+}
+
 /*goal of the function: process each of the access or loads, calculate and return process cycles to 
 perform operation.
 */
@@ -99,15 +140,20 @@ int process_trace(Cache &cache, char operation, uint32_t address, int num_sets, 
   uint32_t tag = address >> (block_offset_size + index_size);
 
   Set &set = cache.sets[index];
-  int i = 0; 
+  int i = 0; int hit_slot = -1;
   bool found = false;
   while (i < set.slots.size()) {
-    if (set.slots[i].tag == tag) {
+    if (set.slots[i].valid && set.slots[i].tag == tag) {
       found = true;
+      hit_slot = i;
       break;
     }
     i++;
   }
+
+  global_time++;
+
+  update_counters(set, operation, hit_slot, write_through_or_back);
 
   if (found) {
     /* evictions only happen during hits, I think
@@ -142,7 +188,7 @@ Cache create_cache(int num_sets, int num_blocks) {
       cache.sets[i].slots[j].dirty = false; 
       cache.sets[i].slots[j].tag = 0;
       cache.sets[i].slots[j].load_ts = 0;
-      cache.sets[i].slots[j].access_ts = true;
+      cache.sets[i].slots[j].access_ts = 0;
     }
   }
   return cache;
