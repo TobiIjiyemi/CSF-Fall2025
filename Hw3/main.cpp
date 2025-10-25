@@ -271,7 +271,6 @@ int main( int argc, char **argv ) {
   printf("Store Misses: %d\n", store_misses);
   printf("Total Cycles: %d\n", total_cycles);
 
-
   return 0;
 }
 
