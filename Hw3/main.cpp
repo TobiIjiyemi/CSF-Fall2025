@@ -86,7 +86,7 @@ void load_miss(Set &set, uint32_t slot_index, uint32_t tag, int num_bytes) {
   } 
 
   Slot &slot = set.slots[empty_slot];
-  
+
   slot.tag = tag;
   slot.valid = true;
   slot.dirty = false;
@@ -262,6 +262,15 @@ int main( int argc, char **argv ) {
     process_cycles += process_trace(cache, operation, address, num_sets, num_blocks, num_bytes, 
                   write_allocate_action, write_through_or_back, eviction);
   }
+
+  printf("Total Loads: %d\n", total_loads);
+  printf("Total Stores: %d\n", total_stores);
+  printf("Load Hits: %d\n", load_hits);
+  printf("Load Misses: %d\n", load_misses);
+  printf("Store Hits: %d\n", store_hits);
+  printf("Store Misses: %d\n", store_misses);
+  printf("Total Cycles: %d\n", total_cycles);
+
 
   return 0;
 }
