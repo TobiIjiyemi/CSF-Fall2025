@@ -225,17 +225,6 @@ int process_trace(Cache &cache, char operation, uint32_t address, int num_sets,
 
   // Tobi this handles the scenrios you were describing with if (found), some of the functions you outlined for the different scenarios are being called here
   update_counters(set, operation, hit_slot, write_through_or_back, write_allocate_action, tag, num_bytes);
-
-  // then I call more of the functions you created here
-  /*this logic now moved to update_counters for simplification */
-  // if (hit_slot == -1) {
-  //   int slot_to_replace = find_lru(set);
-  //   if (operation == 'l') {
-  //     load_miss(set, slot_to_replace, tag, num_bytes);
-  //   } else {
-  //     store_miss(set, num_bytes, slot_to_replace, write_allocate_action, tag);
-  //   }
-  // }
   
   //if found
   /* evictions only happen during hits, I think
@@ -314,7 +303,6 @@ int main( int argc, char **argv ) {
                   write_allocate_action, write_through_or_back);
   }
 
-<<<<<<< HEAD
   printf("Total Loads: %d\n", total_loads);
   printf("Total Stores: %d\n", total_stores);
   printf("Load Hits: %d\n", load_hits);
@@ -323,14 +311,5 @@ int main( int argc, char **argv ) {
   printf("Store Misses: %d\n", store_misses);
   printf("Total Cycles: %d\n", total_cycles);
 
-=======
-  printf("Total Loads: %u\n", total_loads);
-  printf("Total Stores: %u\n", total_stores);
-  printf("Load Hits: %u\n", load_hits);
-  printf("Load Misses: %u\n", load_misses);
-  printf("Store Hits: %u\n", store_hits);
-  printf("Store Misses: %u\n", store_misses);
-  printf("Total Cycles: %u\n", total_cycles);
->>>>>>> 2db3960af525bb858ff16397e1ff6f3fe230cb10
   return 0;
 }
