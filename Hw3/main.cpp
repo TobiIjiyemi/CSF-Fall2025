@@ -68,17 +68,37 @@ void load_found(Set &set, uint32_t slot_index, uint32_t tag) {
   set.slots[slot_index].load_ts = global_time;
 }
 
-void load_miss(Set &set, uint32_t slot_index, uint32_t tag) {
+void load_miss(Set &set, uint32_t slot_index, uint32_t tag, int num_bytes) {
   //evictions
+  total_cycles += (num_bytes / 4) * 100; // figure it out
 
+  int empty_slot = -1;
+  for (int i = 0; i < set.slots.size(); i++) {
+    if (!set.slots[i].valid) {
+      empty_slot = i;
+      break;
+    }
+  }
 
+  if (empty_slot == -1) {
+    // Have to evict
+    empty_slot = find_lru(set);
+  } 
+
+  Slot &slot = set.slots[empty_slot];
+  
+  slot.tag = tag;
+  slot.valid = true;
+  slot.dirty = false;
+  slot.load_ts = global_time;
+  slot.access_ts = global_time;
 }
 
 void store_found(Set &set, uint32_t slot_index, char wt_or_wb, uint32_t tag, int TIMESTAMP) {
 
 }
 
-void store_miss(Set &set, uint32_t slot_index, char nw_or_wa, uint32_t tag) {
+void store_miss(Set &set, uint32_t slot_index, string nw_or_wa, uint32_t tag) {
 
 }
 
@@ -154,15 +174,15 @@ int process_trace(Cache &cache, char operation, uint32_t address, int num_sets, 
   global_time++;
 
   // Tobi this handles the scenrios you were describing with if (found), some of the functions you outlined for the different scenarios are being called here
-  update_counters(set, operation, hit_slot, write_through_or_back);
+  update_counters(set, operation, hit_slot, eviction);
 
   // then I call more of the functions you created here
   if (hit_slot == -1) {
     int slot_to_replace = find_lru(set);
     if (operation == 'l') {
-      load_miss(set, slot_to_replace, tag);
+      load_miss(set, slot_to_replace, tag, num_bytes);
     } else {
-      store_miss(set, slot_to_replace, tag);
+      store_miss(set, slot_to_replace, write_allocate_action, tag);
     }
   }
   
