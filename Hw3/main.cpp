@@ -63,6 +63,19 @@ int find_lru(Set &set) {
   return index;
 }
 
+int find_fifo(Set &set) {
+  // the block that was loaded in the first is the one with the largest load_ts
+  int index = 0;
+  uint32_t current_oldest = set.slots[0].load_ts;
+  for (uint32_t i = 1; i < set.slots.size(); i++ ) {
+    if(set.slots[i].load_ts < current_oldest) {
+      current_oldest = set.slots[i].load_ts;
+      index = i;
+    }
+  }
+  return index;
+}
+
 void check_combinations(int num_sets, int num_blocks) {
   if (num_blocks == 1) {
     //direct-mapped
@@ -93,7 +106,7 @@ void load_miss(Set &set, uint32_t tag, int num_bytes, string wt_or_wb) {
 
   if (empty_slot == -1) {
     // Have to evict
-    empty_slot = find_lru(set);
+    empty_slot = find_fifo(set);
     Slot &victim = set.slots[empty_slot];
 
     if (victim.valid && victim.dirty && wt_or_wb == "write-back") {
@@ -139,10 +152,10 @@ void store_miss(Set &set, int num_bytes, string nw_or_wa, string wt_or_wb, uint3
     }
 
     if (slot_to_replace == -1) {
-      slot_to_replace = find_lru(set);
-      Slot &lrupop = set.slots[slot_to_replace];
+      slot_to_replace = find_fifo(set);
+      Slot &fifopop = set.slots[slot_to_replace];
 
-      if (lrupop.valid && lrupop.dirty && wt_or_wb == "write-back") {
+      if (fifopop.valid && fifopop.dirty && wt_or_wb == "write-back") {
         total_cycles += (num_bytes / 4) * 100;
       }
     }
@@ -166,10 +179,6 @@ void store_miss(Set &set, int num_bytes, string nw_or_wa, string wt_or_wb, uint3
   }
 }
 
-//save for milestone 3
-// void perform_eviction_fifo(Set &set) {
-
-// }
 
 void update_counters(Set &set, char operation, int hit_slot, string write_through_or_back, string write_allocate_action, uint32_t tag, int num_bytes) {
   if (operation == 'l') { 
@@ -225,26 +234,6 @@ int process_trace(Cache &cache, char operation, uint32_t address, int num_sets,
 
   // Tobi this handles the scenrios you were describing with if (found), some of the functions you outlined for the different scenarios are being called here
   update_counters(set, operation, hit_slot, write_through_or_back, write_allocate_action, tag, num_bytes);
-  
-  //if found
-  /* evictions only happen during hits, I think
-    found for load: just calculate process cycles
-    found for store:
-    1.write-through: 
-    2.write_back: mark as dirty and only write when block is evicted
-    */
-   
-    // else
-    /*if not found, then different things to do depending on operation:
-    if not found for a load then it'll be 100 p cycles for every 4 bytes for main memeroy access,
-    then load into cache. break into subfunctions. function for loading into cache taking parameters 
-    (cache, set index, slot index). so we can just call it rather than putting in this body
-
-    if not found for a store then.. 
-      if no write allcoate then just don't modify anything and it falls to the wayside
-      if write allocate then access memory into the cache and then store (100 + 1) per 4 bytes store operation
-    */
-  //default value for processor cycles for now
 
   return 0;
 }
