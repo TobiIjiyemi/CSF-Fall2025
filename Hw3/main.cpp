@@ -91,7 +91,7 @@ void load_found(Set &set, uint32_t slot_index) {
   total_cycles++;
 }
 
-void load_miss(Set &set, uint32_t tag, int num_bytes, string wt_or_wb) {
+void load_miss(Set &set, uint32_t tag, int num_bytes, string wt_or_wb, string eviction) {
   //evictions
   //total_cycles += (num_bytes / 4) * 100; 
 
@@ -106,7 +106,11 @@ void load_miss(Set &set, uint32_t tag, int num_bytes, string wt_or_wb) {
 
   if (empty_slot == -1) {
     // Have to evict
-    empty_slot = find_fifo(set);
+    if (eviction == "fifo") {
+      empty_slot = find_fifo(set);
+    } else {
+      empty_slot = find_lru(set);
+    }
     Slot &victim = set.slots[empty_slot];
 
     if (victim.valid && victim.dirty && wt_or_wb == "write-back") {
@@ -138,7 +142,7 @@ void store_found(Set &set, uint32_t slot_index, string wt_or_wb) {
   }
 }
 
-void store_miss(Set &set, int num_bytes, string nw_or_wa, string wt_or_wb, uint32_t tag) {
+void store_miss(Set &set, int num_bytes, string nw_or_wa, string wt_or_wb, uint32_t tag, string eviction) {
   if (nw_or_wa == "no-write-allocate") {
     total_cycles += 100;
   } else {
@@ -152,10 +156,15 @@ void store_miss(Set &set, int num_bytes, string nw_or_wa, string wt_or_wb, uint3
     }
 
     if (slot_to_replace == -1) {
-      slot_to_replace = find_fifo(set);
-      Slot &fifopop = set.slots[slot_to_replace];
+      if (eviction == "fifo") {
+         slot_to_replace = find_fifo(set);
+      } else {
+        slot_to_replace = find_lru(set);
+      }
+     
+      Slot &pop = set.slots[slot_to_replace];
 
-      if (fifopop.valid && fifopop.dirty && wt_or_wb == "write-back") {
+      if (pop.valid && pop.dirty && wt_or_wb == "write-back") {
         total_cycles += (num_bytes / 4) * 100;
       }
     }
@@ -180,7 +189,7 @@ void store_miss(Set &set, int num_bytes, string nw_or_wa, string wt_or_wb, uint3
 }
 
 
-void update_counters(Set &set, char operation, int hit_slot, string write_through_or_back, string write_allocate_action, uint32_t tag, int num_bytes) {
+void update_counters(Set &set, char operation, int hit_slot, string write_through_or_back, string write_allocate_action, uint32_t tag, int num_bytes, string eviction) {
   if (operation == 'l') { 
     total_loads++;
     if (hit_slot != -1) {
@@ -188,7 +197,7 @@ void update_counters(Set &set, char operation, int hit_slot, string write_throug
       load_found(set, hit_slot);
     } else {
       load_misses++;
-      load_miss(set, tag, num_bytes, write_through_or_back);    
+      load_miss(set, tag, num_bytes, write_through_or_back, eviction);    
     }
   } else if (operation == 's') {
     total_stores++;
@@ -197,7 +206,7 @@ void update_counters(Set &set, char operation, int hit_slot, string write_throug
       store_found(set, hit_slot, write_through_or_back);
     } else {
       store_misses++;
-      store_miss(set, num_bytes, write_allocate_action, write_through_or_back, tag);
+      store_miss(set, num_bytes, write_allocate_action, write_through_or_back, tag, eviction);
     }
   } 
 }
@@ -206,7 +215,7 @@ void update_counters(Set &set, char operation, int hit_slot, string write_throug
 perform operation.
 */
 int process_trace(Cache &cache, char operation, uint32_t address, int num_sets, 
-  int num_bytes, string write_allocate_action, string write_through_or_back) {
+  int num_bytes, string write_allocate_action, string write_through_or_back, string eviction) {
 
   int block_offset_size = log2(num_bytes); // the lowest n bits 
   int index_size = log2(num_sets); // the next n bits
@@ -233,7 +242,7 @@ int process_trace(Cache &cache, char operation, uint32_t address, int num_sets,
   global_time++;
 
   // Tobi this handles the scenrios you were describing with if (found), some of the functions you outlined for the different scenarios are being called here
-  update_counters(set, operation, hit_slot, write_through_or_back, write_allocate_action, tag, num_bytes);
+  update_counters(set, operation, hit_slot, write_through_or_back, write_allocate_action, tag, num_bytes, eviction);
 
   return 0;
 }
@@ -268,7 +277,7 @@ int main( int argc, char **argv ) {
 
   string write_allocate_action = argv[4];
   string write_through_or_back = argv[5];
-  //string eviction = argv[6];
+  string eviction = argv[6];
 
   // checking parameters
   int check_parameters = valid_parameters(num_sets, num_blocks, num_bytes, write_allocate_action, write_through_or_back);
@@ -289,7 +298,7 @@ int main( int argc, char **argv ) {
   // Extract the 'l' or 's' operation and the address
   while (cin >> operation >> hex >> address >> unused) {
     process_trace(cache, operation, address, num_sets, num_bytes, 
-                  write_allocate_action, write_through_or_back);
+                  write_allocate_action, write_through_or_back, eviction);
   }
 
   printf("Total Loads: %d\n", total_loads);
