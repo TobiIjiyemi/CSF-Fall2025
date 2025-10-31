@@ -1,7 +1,11 @@
 TODO: names of team members and their contributions to the project
 Dayana Matamoros Ramos: Created the process_trace, update_counters, create_cache, update_counters, find_lru, valid_parameters, and load_miss functions. 
 
+For ms3: Created the find_fifo function and then integrated the 6th argument (eviction policy) into the rest of the code. Compared our results to those on
+courselore. 
+
 Tobi Ijiyemi: Created the load_found, store_found, and store_miss functions. Also worked on the update_counters function. 
+For ms3: Completed the analysis portion of the assignment. Set up the experiment and analyzed the results of that experiment in the README.  
 
 Both coded in main. 
 
@@ -151,7 +155,7 @@ Total Cycles: 9611162
 
 Analysis from varying the policies of the cache:
 
-From the data we've produced above, it seems like the best overall cahce policy is 
+From the data we've produced above, it seems like the best overall cache policy is 
 write-allocate (WA) + write-back (WB) + least-recently-used (LRU) as an evicition policy.
 
 First of all write-through vs write-back: 

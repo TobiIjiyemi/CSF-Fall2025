@@ -76,16 +76,6 @@ int find_fifo(Set &set) {
   return index;
 }
 
-void check_combinations(int num_sets, int num_blocks) {
-  if (num_blocks == 1) {
-    //direct-mapped
-  } else if (num_sets == 1) {
-    //fully associative
-  } else {
-    //set-associative
-  }
-}
-
 void load_found(Set &set, uint32_t slot_index) {
   set.slots[slot_index].access_ts = global_time;
   total_cycles++;
@@ -282,9 +272,6 @@ int main( int argc, char **argv ) {
   // checking parameters
   int check_parameters = valid_parameters(num_sets, num_blocks, num_bytes, write_allocate_action, write_through_or_back);
   if (check_parameters == 1) return 1;
-
-  // Checking combinations
-  check_combinations(num_sets, num_blocks);
 
   // Create cache
   Cache cache = create_cache(num_sets, num_blocks);
