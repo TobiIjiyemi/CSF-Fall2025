@@ -8,6 +8,11 @@ Both coded in main.
 TODO (for MS3): best cache report
 
 Shorthand: write-allocate (WA), write-back (WB), no_write-allocate (NWA), write-through (WT), least-recently-used (LRU), first in first out (fifo)
+Conclusion (also at the very bottom): Compiling all of this analysis together, it seems like the best cache (from our tests) is a 32kb, 4-byte, 4-way (or 8-way)
+write allocate, write-back, and least recently used eviction policy cache configuration.
+
+*A significant portion of the README data is just test-data*
+
 
 Goal of the experiment is to find the best cache configuration. We can guide the experiment by tracking on
 two key outputs: total cycles (that tests performance of the cache) and total cache size (cost of the cache).
@@ -739,3 +744,4 @@ while 4-way and 8-way associativity resulted in around 8M average cycles.
 
 Compiling all of this analysis together, it seems like the best cache (from our tests) is a 32kb, 4-byte, 4-way (or 8-way)
 write allocate, write-back, and least recently used eviction policy cache configuration.
+
