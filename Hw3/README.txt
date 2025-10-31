@@ -169,3 +169,11 @@ We see this with the difference in cycles with WT + LRU (gcc) with WA producing 
 13.24M cycles for WA and 9.57M cycles for NWA.
 
 In conclusion: the best policies to use are WA + WB + LRU.
+
+Now for the next part of the experiment we're going to use write-allocate, write-back, and LRU as the definitive policies and focus on
+varying the number of sets, blocks, and block sizes to see if we can reduce costs and maximize performance. The plan is to test specific
+total cache sizes and within each cache size test the different configurations of the cache (from direct-mapping to set associativitiy to n, m 
+set associativity and then block size as well) and see how that affects performance, and to see how far we can minimize the memory costs of the cache.
+
+Okay we're going to break the testing up into 3 different groups (4kb cache, 8kb cache,and then 32 kb cache) varying the block sizes as well (4 byte, 8 bytes, and 16 bytes)
+and vary the set associativity (1-way, 4-way, and 8-way). Once again we'll be testing on the two trace
