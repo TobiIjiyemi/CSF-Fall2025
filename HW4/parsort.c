@@ -22,14 +22,25 @@ int main( int argc, char **argv ) {
     exit( 1 );
   }
 
-  int fd;
-
   // open the named file
   // TODO: open the named file
+  int fd = open(argv[1], O_RDWR);
+  if (fd < 0) {
+    // file couldn't be opened
+    fprintf(stderr, "Something here");
+    exit( 1 );
+  }
+
 
   // determine file size and number of elements
   unsigned long file_size, num_elements;
   // TODO: determine the file size and number of elements
+  fseek(fd, 0, SEEK_END);
+  file_size = ftell(fd);
+  num_elements = (file_size)/(sizeof(int64_t));
+
+
+
 
   // mmap the file data
   int64_t *arr;
