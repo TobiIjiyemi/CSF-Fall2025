@@ -210,7 +210,6 @@ int quicksort(int64_t *arr, unsigned long start, unsigned long end, unsigned lon
   // Partition
   unsigned long mid = partition(arr, start, end);
 
-
   // Recursively sort the left and right partitions
   int left_success, right_success;
   // TODO: modify this code so that the recursive calls execute in child processes
@@ -221,7 +220,7 @@ int quicksort(int64_t *arr, unsigned long start, unsigned long end, unsigned lon
 
   pid_t left_pid, right_pid;
 
-  //Left Fork
+  // Left Fork
   left_pid = fork();
   if (left_pid == 0)
   {
@@ -236,7 +235,8 @@ int quicksort(int64_t *arr, unsigned long start, unsigned long end, unsigned lon
     {
       exit(1);
     }
-  } else if (left_pid < 0)
+  }
+  else if (left_pid < 0)
   {
     // fork failed
     // ...handle error...
@@ -249,10 +249,13 @@ int quicksort(int64_t *arr, unsigned long start, unsigned long end, unsigned lon
   {
     // executing in the child
     // ...do work...
-    right_success = quicksort(arr, mid+1, end, par_threshold);
-    if (right_success == 1) exit(0);
-    else exit(1);
-  } else if (right_pid < 0)
+    right_success = quicksort(arr, mid + 1, end, par_threshold);
+    if (right_success == 1)
+      exit(0);
+    else
+      exit(1);
+  }
+  else if (right_pid < 0)
   {
     // fork failed
     // ...handle error...
@@ -265,37 +268,49 @@ int quicksort(int64_t *arr, unsigned long start, unsigned long end, unsigned lon
   int rc, wstatus;
   left_success = 1;
   right_success = 1;
-  rc = waitpid( left_pid, &wstatus, 0 );
-  if (rc < 0) {
+  rc = waitpid(left_pid, &wstatus, 0);
+  if (rc < 0)
+  {
     fprintf(stderr, "waitpid left failed\n");
     left_success = 0;
-  } else {
-    if ( !WIFEXITED( wstatus )) {
-    // child did not exit normally (e.g., it was terminated by a signal)
-    // ...handle child failure...
-    fprintf(stderr, "Left child terminated abnormally\n");
-    left_success = 0;
-  } else if ( WEXITSTATUS( wstatus ) != 0 ) { 
-    fprintf(stderr, "Left child exited with non-zero code\n");
-    left_success = 0;
   }
-}
+  else
+  {
+    if (!WIFEXITED(wstatus))
+    {
+      // child did not exit normally (e.g., it was terminated by a signal)
+      // ...handle child failure...
+      fprintf(stderr, "Left child terminated abnormally\n");
+      left_success = 0;
+    }
+    else if (WEXITSTATUS(wstatus) != 0)
+    {
+      fprintf(stderr, "Left child exited with non-zero code\n");
+      left_success = 0;
+    }
+  }
 
-rc = waitpid( right_pid, &wstatus, 0 );
-if (rc < 0) {
+  rc = waitpid(right_pid, &wstatus, 0);
+  if (rc < 0)
+  {
     fprintf(stderr, "waitpid right failed\n");
     right_success = 0;
-  } else {
-    if ( !WIFEXITED( wstatus )) {
-    // child did not exit normally (e.g., it was terminated by a signal)
-    // ...handle child failure...
-    fprintf(stderr, "Right child terminated abnormally\n");
-    right_success = 0;
-  } else if ( WEXITSTATUS( wstatus ) != 0 ) { 
-    fprintf(stderr, "Right child exited with non-zero code\n");
-    right_success = 0;
   }
-}
+  else
+  {
+    if (!WIFEXITED(wstatus))
+    {
+      // child did not exit normally (e.g., it was terminated by a signal)
+      // ...handle child failure...
+      fprintf(stderr, "Right child terminated abnormally\n");
+      right_success = 0;
+    }
+    else if (WEXITSTATUS(wstatus) != 0)
+    {
+      fprintf(stderr, "Right child exited with non-zero code\n");
+      right_success = 0;
+    }
+  }
   return left_success && right_success;
 }
 
