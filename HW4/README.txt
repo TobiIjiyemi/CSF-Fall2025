@@ -3,9 +3,9 @@ CONTRIBUTIONS
 TODO: write a brief summary of how each team member contributed to
 the project.
 
-Tobi - Task 1
+Tobi - Task 1, Task 2
 Dayana - Task 3
-Both: Task 2, Analysis
+Both: Analysis
 
 REPORT
 
