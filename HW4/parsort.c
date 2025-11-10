@@ -24,27 +24,35 @@ int main( int argc, char **argv ) {
 
   // open the named file
   // TODO: open the named file
-  int fd = open(argv[1], O_RDWR);
+  fd = open(argv[1], O_RDWR);
   if (fd < 0) {
-    // file couldn't be opened
-    fprintf(stderr, "Something here");
-    exit( 1 );
-  }
-
-
+    fprintf(stderr, "File can't be opened")
+    exit(1);
+    //file can't be opened.
+  } 
   // determine file size and number of elements
   unsigned long file_size, num_elements;
   // TODO: determine the file size and number of elements
-  fseek(fd, 0, SEEK_END);
-  file_size = ftell(fd);
-  num_elements = (file_size)/(sizeof(int64_t));
-
-
-
-
+  struct stat statbuf;
+  int rc = fstat(fd, &statbuf);
+  if (rc != 0) {
+    return -1; //fstat error and exit
+  }
+  file_size = statbuf.st_size;
+  num_elements = statbuf.st_size / sizeof(int64_t);
   // mmap the file data
   int64_t *arr;
   // TODO: mmap the file data
+  arr = mmap(NULL, file_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+  close(fd);
+  if (arr == MAP_FAILED) {
+    //mmap error and exit
+    return -1;
+  }
+  /* assignment caution: 
+  Be careful though! Going off the end of the array will
+  silently extend the file, which can rapidly lead to
+  disk space depletion! */
 
   // Sort the data!
   int success;
@@ -53,10 +61,10 @@ int main( int argc, char **argv ) {
     fprintf( stderr, "Error: sorting failed\n" );
     exit( 1 );
   }
-
+  
   // Unmap the file data
   // TODO: unmap the file data
-
+  munmap(arr, file_size);
   return 0;
 }
 
