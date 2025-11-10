@@ -140,4 +140,17 @@ user    0m0.557s
 sys     0m0.145s
 
 
+ For arrays of size < 32768 elements, the time it takes to fork() for the left and right sub-arrays and then have the parent wait for each sub-process to complete
+ before continuing can be greater than the time it would take to sort the array in one process. 
+ 
+ Each child process requires its own virtual address space, which the OS must map to physical memory through page tables. This increases overhead space and also 
+ increases the potential of page faults, resulting in longer execution time (as OS has to handle each page fault that occurs). 
+
+ However, for arrays of size > 32,768, the cost of creating and managing child processes is smaller in comparison to the cost of performing quick sort. Dividing the 
+ array among multiple processes running in parallel, despite the increase in overhead, ultimately decreases execution time because multiple sub-arrays are being sorted
+ at once.
+
+ The threshold is where the expensiveness of creating child processes is outweighed by the expedited parallel sorting. 
+
+
 
