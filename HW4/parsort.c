@@ -42,9 +42,17 @@ int main(int argc, char **argv)
   int rc = fstat(fd, &statbuf);
   if (rc != 0)
   {
-    return -1; // fstat error and exit
+    fprintf(stderr, "Fstat error");
+    exit(1); // fstat error and exit
   }
   file_size = statbuf.st_size;
+
+  if (file_size % sizeof(int64_t) != 0) {
+    fprintf(stderr, "file size isn't a multiple of int64_t bytes");
+    close(fd);
+    exit(1);
+  }
+
   num_elements = statbuf.st_size / sizeof(int64_t);
   // mmap the file data
   int64_t *arr;
@@ -53,6 +61,7 @@ int main(int argc, char **argv)
   close(fd);
   if (arr == MAP_FAILED)
   {
+    fprintf(stderr, "mmap error!");
     // mmap error and exit
     return -1;
   }
