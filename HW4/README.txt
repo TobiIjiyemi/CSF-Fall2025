@@ -154,7 +154,8 @@ sys     0m0.145s
  array among multiple processes running in parallel, despite the increase in overhead, ultimately decreases execution time because multiple sub-arrays are being sorted
  at once.
 
+ It's important to note that when too many child processes are created, the time saved by parallel sorting accrues overhead on the system time because
+ each process created doesn't get enough dedicated time to sort and every x amount of milliseconds the processor ends up switching to another process. We see this 
+ as the thresholds decrease from 2097152 to 131072 and 16384 and the sys times increase from 0.014s to 0.059s and then finally 0.151 seconds. 
+
  The threshold is where the expensiveness of creating child processes is outweighed by the expedited parallel sorting. 
-
-
-
