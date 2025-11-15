@@ -22,6 +22,8 @@ int main(int argc, char **argv) {
   username = argv[3];
 
   // TODO: connect to server
+  
+
 
   // TODO: send slogin message
 
