@@ -68,8 +68,8 @@ bool Connection::send(const Message &msg) {
 
   std::string message = msg.tag + ":" + msg.data + "\n";
 
-  ssize_t wrote = rio_writen(m_fd, message.c_str(), message.size());
-  if (wrote != (ssize_t)(message.size())) {
+  ssize_t wrote = rio_writen(m_fd, message.c_str(), message.size()); // Number of bytes that were successfully written
+  if (wrote != (ssize_t)(message.size())) { // if socket closes or an error happens
     m_last_result = EOF_OR_ERROR;
     return false;
   }
