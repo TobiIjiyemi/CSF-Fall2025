@@ -66,7 +66,7 @@ int main(int argc, char **argv)
       std::string arg;
       size_t space = input.find(' ');
       if (space != std::string::npos) {
-        command = input.substr(0, space - 1);
+        command = input.substr(0, space);
         arg = input.substr(space + 1);
       }
       else {
@@ -90,7 +90,7 @@ int main(int argc, char **argv)
         if (response.tag == TAG_ERR) {
           std::cerr << response.data << "\n";
         }
-      } else if (command == "join") {
+      } else if (command == "/join") {
         Message join_msg(TAG_JOIN, arg);
         if (!conn.send(join_msg)) {
           std::cerr << "Failed to send join message\n";
@@ -102,7 +102,7 @@ int main(int argc, char **argv)
           std::cerr << response.data << "\n";
         }
       } else {
-        std::cerr << "Unknown comman was entered: " << command << "\n";
+        std::cerr << "Unknown command was entered: " << command << "\n";
       }
     } else {
       Message normal_msg(TAG_SENDALL, input);
