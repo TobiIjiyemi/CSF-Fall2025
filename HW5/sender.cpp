@@ -7,8 +7,10 @@
 #include "connection.h"
 #include "client_util.h"
 
-int main(int argc, char **argv) {
-  if (argc != 4) {
+int main(int argc, char **argv)
+{
+  if (argc != 4)
+  {
     std::cerr << "Usage: ./sender [server_address] [port] [username]\n";
     return 1;
   }
@@ -22,84 +24,86 @@ int main(int argc, char **argv) {
   username = argv[3];
 
   // TODO: connect to server
-  Connection conn; 
+  Connection conn;
   conn.connect(server_hostname, server_port);
-  
-  if (!conn.is_open()) {
+
+  if (!conn.is_open())
+  {
     std::cerr << "Error: failed to connect to server\n";
     exit(1);
   }
 
   // TODO: send slogin message
   Message login(TAG_SLOGIN, username);
-  if(!conn.send(login)) {
+  if (!conn.send(login))
+  {
     std::cerr << "Error: failed to send slogin message\n";
     conn.close();
     return 1;
   }
 
   Message response;
-  if(!conn.receive(response)) {
+  if (!conn.receive(response))
+  {
     std::cerr << "Error: failed to read slogin response\n";
     conn.close();
     return 1;
   }
 
-  if(response.tag == TAG_ERR) {
+  if (response.tag == TAG_ERR)
+  {
     std::cerr << response.data << "\n";
     conn.close();
     return 1;
   }
 
-
   // TODO: loop reading commands from user, sending messages to
   //       server as appropriate
 
   std::string input;
-  while(true) {
+  while (true)
+  {
     std::cout << " > ";
-    if (!std::getline(std::cin , input)) break;
-
-    if(!input.empty() && input[0] == '/') {
+    if (!std::getline(std::cin, input))
+      break;
+    if (!input.empty() && input[0] == '/') {
       std::string command;
       std::string arg;
       size_t space = input.find(' ');
       if (space != std::string::npos) {
-        command = input.substr(0, space - 1);
+        command = input.substr(0, space);
         arg = input.substr(space + 1);
-      } else {
+      }
+      else {
         command = input.substr(1);
         arg = "";
       }
-
       if (command == "quit") {
         Message quit_msg(TAG_QUIT, "");
         conn.send(quit_msg);
         break;
-      } else if (command == "leave") {
+      }
+      else if (command == "leave") {
         Message leave_msg(TAG_LEAVE, "");
         if (!conn.send(leave_msg)) {
           std::cerr << "Failed to send leave message\n";
           continue;
-        }
-        if (!conn.receive(leave_msg)) {
+        } if (!conn.receive(leave_msg)) {
           std::cerr << "Server did not respond\n";
           continue;
-        } 
+        }
         if (response.tag == TAG_ERR) {
           std::cerr << response.data << "\n";
         }
       } else if (command == "join") {
-        Message join_msg(TAG_JOIN, "");
+        Message join_msg(TAG_JOIN, arg);
         if (!conn.send(join_msg)) {
           std::cerr << "Failed to send joing message\n";
           continue;
-        }
-        if (!conn.receive(join_msg)) {
+        } if (!conn.receive(join_msg)) {
           std::cerr << "Server did not respond\n";
           continue;
-        } 
-        if (response.tag == TAG_ERR) {
+        } if (response.tag == TAG_ERR) {
           std::cerr << response.data << "\n";
         }
       } else {
@@ -108,18 +112,16 @@ int main(int argc, char **argv) {
     } else {
       Message normal_msg(TAG_SENDALL, input);
       if (!conn.send(normal_msg)) {
-          std::cerr << "Failed to send message\n";
-          continue;
-        }
-        if (!conn.receive(normal_msg)) {
-          std::cerr << "Server did not respond\n";
-          continue;
-        } 
-        if (response.tag == TAG_ERR) {
-          std::cerr << response.data << "\n";
-        }
+        std::cerr << "Failed to send message\n";
+        continue;
+      } if (!conn.receive(normal_msg)) {
+        std::cerr << "Server did not respond\n";
+        continue;
+      } if (response.tag == TAG_ERR) {
+        std::cerr << response.data << "\n";
       }
     }
-    conn.close(); 
+  }
+  conn.close();
   return 0;
 }
