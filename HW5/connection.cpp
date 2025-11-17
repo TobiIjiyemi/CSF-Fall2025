@@ -66,10 +66,15 @@ bool Connection::send(const Message &msg) {
     return false;
   }
 
-  std::string message = msg.tag + ":" + msg.data + "\n";
+  std::string message_string = msg.tag + ":" + msg.data + "\n";
 
-  ssize_t wrote = rio_writen(m_fd, message.c_str(), message.size()); // Number of bytes that were successfully written
-  if (wrote != (ssize_t)(message.size())) { // if socket closes or an error happens
+  if (message_string.size() > msg.MAX_LEN) {
+    m_last_result = EOF_OR_ERROR; 
+    return false;
+  }
+
+  ssize_t wrote = rio_writen(m_fd, message_string.c_str(), message_string.size()); // Number of bytes that were successfully written
+  if (wrote != (ssize_t)(message_string.size())) { // if socket closes or an error happens
     m_last_result = EOF_OR_ERROR;
     return false;
   }
@@ -82,5 +87,5 @@ bool Connection::receive(Message &msg) {
   // TODO: receive a message, storing its tag and data in msg
   // return true if successful, false if not
   // make sure that m_last_result is set appropriately
-  //hi
+
 }
