@@ -66,16 +66,28 @@ int main(int argc, char **argv) {
   // TODO: loop waiting for messages from server
   //       (which should be tagged with TAG_DELIVERY)
   
-  Message server_msg;
+  Message server_msg; //room:sender:message_text
   while (conn.receive(server_msg)) {
     if (server_msg.tag == TAG_DELIVERY) {
       std::string data = server_msg.data;
-      size_t seperator = data.find(':');
-      if (seperator == std::string::npos) {
-        std::cerr << "Missign room from message\n";
+      size_t room_sep_colon = data.find(':');
+      if (room_sep_colon == std::string::npos) {
+        std::cerr << "Missign room from server message\n";
         continue;
       }
-    }
+
+      size_t sender_sep_colon = data.find(':', room_sep_colon + 1);
+      if (sender_sep_colon == std::string::npos) {
+        std::cerr << "Missing sender from server message\n";
+        continue;
+      }
+
+      std::string sender = data.substr(room_sep_colon + 1, sender_sep_colon - (room_sep_colon + 1));
+      std::string msg_text = data.substr(sender_sep_colon + 1);
+      std::cout << sender << ": " << msg_text << "\n";
+    } else if (server_msg.tag == TAG_ERR) {
+      std::cerr << "Error from server: " << server_msg.data << "\n";
   }
+  conn.close();
   return 0;
 }
