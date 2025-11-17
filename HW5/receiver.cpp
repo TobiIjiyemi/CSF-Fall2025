@@ -87,7 +87,8 @@ int main(int argc, char **argv) {
       std::cout << sender << ": " << msg_text << "\n";
     } else if (server_msg.tag == TAG_ERR) {
       std::cerr << "Error from server: " << server_msg.data << "\n";
-  }
+    }
   conn.close();
+  }
   return 0;
 }
