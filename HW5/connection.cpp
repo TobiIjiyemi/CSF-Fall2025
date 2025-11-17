@@ -87,5 +87,37 @@ bool Connection::receive(Message &msg) {
   // TODO: receive a message, storing its tag and data in msg
   // return true if successful, false if not
   // make sure that m_last_result is set appropriately
+  if(!is_open()) {
+    m_last_result = EOF_OR_ERROR;
+    return false;
+  }
 
+  char buf[Message::MAX_LEN + 1];
+  ssize_t n = rio_readlineb(&m_fdbuf, buf, sizeof(buf));
+  if (n <= 0) {
+    m_last_result = EOF_OR_ERROR;
+    return false;
+  }
+
+  std::string tag;
+  std::string data;
+  size_t i = 0;
+
+  while (i < (size_t)n && buf[i] != ':') {
+    tag += buf[i++];
+  }
+
+  if ( i < (size_t)n && buf[i] == ':') {
+    i++;
+  }
+
+  while (i < (size_t)n && buf[i] != '\r' && buf[i] != '\n') {
+    data += buf[i++];
+  }
+
+  msg.tag = tag;
+  msg.data = data;
+
+  m_last_result = SUCCESS;
+  return true;
 }
