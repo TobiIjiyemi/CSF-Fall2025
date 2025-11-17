@@ -14,38 +14,35 @@ int main(int argc, char **argv) {
   }
 
   std::string server_hostname;
-  std::string server_port;
+  int server_port;
   std::string username;
 
   server_hostname = argv[1];
-  server_port = argv[2];
+  server_port = std::stoi(argv[2]);
   username = argv[3];
 
   // TODO: connect to server
-  int fd = open_clientfd(server_hostname.c_str(), server_port.c_str());
-  if (fd < 0) {
-    // could not connect to server
-    std::cerr << "Error failed to connect to server";
+  Connection conn; 
+  conn.connect(server_hostname, server_port);
+  if (!conn.is_open()) {
+    std::cerr << "Error: failed to connect to server\n";
     return 1;
   }
 
   // TODO: send slogin message
-  std::string msg = "slogin:" + username + "\n";
-  rio_writen(fd, msg.c_str(), msg.size()); 
-
-  // preparing to read reply
-  rio_t rio;
-  rio_readinitb(&rio, fd);
-  char buf[Message::MAX_LEN + 1]; 
-
-  ssize_t n = rio_readlineb(&rio, buf, sizeof(buf));
-  if (n <= 0) {
-    std::cerr << "Failed to read slogin response";
+  Message login("slogin", username);
+  if(!conn.send(login)) {
+    std::cerr << "Error: failed to send slogin message\n";
     return 1;
   }
 
-  std::string line(buf, n);
-  Message response(line);
+  Message response;
+  if(!conn.receive(response)) {
+    std::cerr << "Error: failed to read slogin response\n";
+    return 1;
+  }
+
+  // preparing to read reply
 
   
 
