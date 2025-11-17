@@ -31,14 +31,14 @@ int main(int argc, char **argv) {
   //       the server for each one)
   Message rlogin_msg(TAG_RLOGIN, username);
   if (!conn.send(rlogin_msg)) {
-    std::cerr << "Failed to send rlogin message\n";
+    std::cerr << rlogin_msg.data << "Failed to send rlogin message\n";
     conn.close();
     return 1;
   }
 
   Message rlogin_resp;
   if (!conn.receive(rlogin_resp)) {
-    std::cerr << "Failed to receive rlogin response\n";
+    std::cerr << rlogin_resp.data << "\n";
     conn.close();
     return 1;
   }
