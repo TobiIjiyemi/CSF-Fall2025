@@ -42,15 +42,16 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  // preparing to read reply
-
-  
-
-
-
 
   // TODO: loop reading commands from user, sending messages to
   //       server as appropriate
+
+  if(response.tag == TAG_ERR) {
+    std::cerr << response.data << "\n";
+    return 1;
+  } else if (response.tag == TAG_OK) {
+    std::cout << "Logged in as " << username << "\n";
+  }
 
   return 0;
 }
