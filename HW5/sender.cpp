@@ -83,7 +83,7 @@ int main(int argc, char **argv)
         if (!conn.send(leave_msg)) {
           std::cerr << "Failed to send leave message\n";
           continue;
-        } if (!conn.receive(leave_msg)) {
+        } if (!conn.receive(response)) {
           std::cerr << "Server did not respond\n";
           continue;
         }
@@ -93,9 +93,9 @@ int main(int argc, char **argv)
       } else if (command == "join") {
         Message join_msg(TAG_JOIN, arg);
         if (!conn.send(join_msg)) {
-          std::cerr << "Failed to send joing message\n";
+          std::cerr << "Failed to send join message\n";
           continue;
-        } if (!conn.receive(join_msg)) {
+        } if (!conn.receive(response)) {
           std::cerr << "Server did not respond\n";
           continue;
         } if (response.tag == TAG_ERR) {
@@ -109,7 +109,7 @@ int main(int argc, char **argv)
       if (!conn.send(normal_msg)) {
         std::cerr << "Failed to send message\n";
         continue;
-      } if (!conn.receive(normal_msg)) {
+      } if (!conn.receive(response)) {
         std::cerr << "Server did not respond\n";
         continue;
       } if (response.tag == TAG_ERR) {
