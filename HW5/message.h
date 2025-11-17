@@ -20,6 +20,12 @@ struct Message {
     : tag(tag), data(data) { }
 
   // TODO: you could add helper functions
+
+  Message(const std::string &line) {
+    size_t seperator = line.find(':');
+    
+  }
+
 };
 
 // standard message tags (note that you don't need to worry about

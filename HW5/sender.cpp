@@ -45,7 +45,10 @@ int main(int argc, char **argv) {
   }
 
   std::string line(buf, n);
-  size_t seperation = line.find(':');
+  Message response(line);
+
+  
+
 
 
 
