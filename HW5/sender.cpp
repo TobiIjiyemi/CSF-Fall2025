@@ -27,31 +27,27 @@ int main(int argc, char **argv)
   Connection conn;
   conn.connect(server_hostname, server_port);
 
-  if (!conn.is_open())
-  {
+  if (!conn.is_open()) {
     std::cerr << "Error: failed to connect to server\n";
     exit(1);
   }
 
   // TODO: send slogin message
   Message login(TAG_SLOGIN, username);
-  if (!conn.send(login))
-  {
+  if (!conn.send(login)) {
     std::cerr << "Error: failed to send slogin message\n";
     conn.close();
     return 1;
   }
 
   Message response;
-  if (!conn.receive(response))
-  {
+  if (!conn.receive(response)) {
     std::cerr << "Error: failed to read slogin response\n";
     conn.close();
     return 1;
   }
 
-  if (response.tag == TAG_ERR)
-  {
+  if (response.tag == TAG_ERR) {
     std::cerr << response.data << "\n";
     conn.close();
     return 1;
@@ -61,8 +57,7 @@ int main(int argc, char **argv)
   //       server as appropriate
 
   std::string input;
-  while (true)
-  {
+  while (true) {
     std::cout << " > ";
     if (!std::getline(std::cin, input))
       break;
@@ -71,7 +66,7 @@ int main(int argc, char **argv)
       std::string arg;
       size_t space = input.find(' ');
       if (space != std::string::npos) {
-        command = input.substr(0, space);
+        command = input.substr(0, space - 1);
         arg = input.substr(space + 1);
       }
       else {
