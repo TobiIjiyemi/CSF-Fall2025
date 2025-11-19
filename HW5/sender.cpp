@@ -84,7 +84,7 @@ int main(int argc, char **argv)
           std::cerr << "Failed to send leave message\n";
           continue;
         } if (!conn.receive(response)) {
-          std::cerr << "Server did not respond\n";
+          std::cerr << "Error: failed to read leave response\n";
           continue;
         }
       } else if (command == "/join") {
@@ -93,7 +93,7 @@ int main(int argc, char **argv)
           std::cerr << "Failed to send join message\n";
           continue;
         } if (!conn.receive(response)) {
-          std::cerr << "Server did not respond\n";
+          std::cerr << "Error: failed to read join response\n";
           continue;
         } 
       } else {
@@ -105,7 +105,7 @@ int main(int argc, char **argv)
         std::cerr << "Failed to send message\n";
         continue;
       } if (!conn.receive(response)) {
-        std::cerr << "Server did not respond\n";
+        std::cerr << "Error: failed to read message response\n";
         continue;
       }
     }
