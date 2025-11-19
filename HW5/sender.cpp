@@ -87,9 +87,6 @@ int main(int argc, char **argv)
           std::cerr << "Server did not respond\n";
           continue;
         }
-        if (response.tag == TAG_ERR) {
-          std::cerr << response.data << "\n";
-        }
       } else if (command == "/join") {
         Message join_msg(TAG_JOIN, arg);
         if (!conn.send(join_msg)) {
@@ -98,9 +95,7 @@ int main(int argc, char **argv)
         } if (!conn.receive(response)) {
           std::cerr << "Server did not respond\n";
           continue;
-        } if (response.tag == TAG_ERR) {
-          std::cerr << response.data << "\n";
-        }
+        } 
       } else {
         std::cerr << "Unknown command was entered: " << command << "\n";
       }
@@ -112,9 +107,10 @@ int main(int argc, char **argv)
       } if (!conn.receive(response)) {
         std::cerr << "Server did not respond\n";
         continue;
-      } if (response.tag == TAG_ERR) {
-        std::cerr << response.data << "\n";
       }
+    }
+    if (response.tag == TAG_ERR) {
+      std::cerr << response.data << "\n";
     }
   }
   conn.close();
