@@ -53,6 +53,12 @@ int main(int argc, char **argv)
     return 1;
   }
 
+  if(response.tag != TAG_OK) {
+    std::cerr << response.data << "\n";
+    conn.close();
+    return 1;
+  }
+
   // TODO: loop reading commands from user, sending messages to
   //       server as appropriate
 

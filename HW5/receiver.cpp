@@ -44,13 +44,13 @@ int main(int argc, char **argv) {
   }
 
   if (rlogin_resp.tag == TAG_ERR) {
-    std::cerr << rlogin_msg.data << "\n";
+    std::cerr << rlogin_resp.data << "\n";
     conn.close();
     return 1;
   } 
   
   if(rlogin_resp.tag != TAG_OK) {
-    std::cerr << rlogin_msg.data << "\n";
+    std::cerr << rlogin_resp.data << "\n";
     conn.close();
     return 1;
   }
