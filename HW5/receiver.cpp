@@ -31,14 +31,26 @@ int main(int argc, char **argv) {
   //       the server for each one)
   Message rlogin_msg(TAG_RLOGIN, username);
   if (!conn.send(rlogin_msg)) {
-    std::cerr << rlogin_msg.data << "Failed to send rlogin message\n";
+    std::cerr << "Failed to send rlogin message\n";
     conn.close();
     return 1;
   }
 
   Message rlogin_resp;
   if (!conn.receive(rlogin_resp)) {
-    std::cerr << rlogin_resp.data << "\n";
+    std::cerr << "Failed to receive response\n";
+    conn.close();
+    return 1;
+  }
+
+  if (rlogin_resp.tag == TAG_ERR) {
+    std::cerr << rlogin_msg.data << "\n";
+    conn.close();
+    return 1;
+  } 
+  
+  if(rlogin_resp.tag != TAG_OK) {
+    std::cerr << rlogin_msg.data << "\n";
     conn.close();
     return 1;
   }
@@ -62,7 +74,14 @@ int main(int argc, char **argv) {
     std::cerr << join_resp.data << "\n";
     conn.close();
     return 1;
+  } 
+  
+  if(join_resp.tag != TAG_OK) {
+    std::cerr << join_resp.data << "\n";
+    conn.close();
+    return 1;
   }
+
   // TODO: loop waiting for messages from server
   //       (which should be tagged with TAG_DELIVERY)
   
@@ -84,15 +103,11 @@ int main(int argc, char **argv) {
 
       std::string sender = data.substr(room_sep_colon + 1, sender_sep_colon - (room_sep_colon + 1));
       std::string msg_text = data.substr(sender_sep_colon + 1);
-      std::cout << sender << ": " << msg_text << "\n";
+      std::cout << sender << ":" << msg_text << "\n";
     } else if (server_msg.tag == TAG_ERR) {
       std::cerr << "Error from server: " << server_msg.data << "\n";
-    } else {
-      std::cerr << "Unknown case\n";
     }
   }
-
-
 
   conn.close();
   return 0;
