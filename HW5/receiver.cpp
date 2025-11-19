@@ -103,7 +103,7 @@ int main(int argc, char **argv) {
 
       std::string sender = data.substr(room_sep_colon + 1, sender_sep_colon - (room_sep_colon + 1));
       std::string msg_text = data.substr(sender_sep_colon + 1);
-      std::cout << sender << ":" << msg_text << "\n";
+      std::cout << sender << ": " << msg_text << "\n";
     } else if (server_msg.tag == TAG_ERR) {
       std::cerr << "Error from server: " << server_msg.data << "\n";
     }
