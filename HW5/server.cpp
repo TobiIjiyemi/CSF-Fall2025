@@ -111,9 +111,37 @@ bool Server::listen() {
 void Server::handle_client_requests() {
   // TODO: infinite loop calling accept or Accept, starting a new
   //       pthread for each connected client
+  while (true) {
+    int clientfd = Accept(m_ssock, NULL, NULL);
+    if (clientfd < 0) {
+      continue;
+    }
+    //when new valid connections are made, create a new object for them
+    //then create a new thread for each of those connections
+    Connection *conn = new Connection(clientfd);
+    ClientInfo *info = new ClientInfo(conn, this);
+
+    pthread_t threadid;
+    if (pthread_create(&threadid, NULL, worker, info) != 0) {
+      std::cerr << "Failed to create thread" << std::endl;
+      delete info;
+    }
+  }
 }
 
 Room *Server::find_or_create_room(const std::string &room_name) {
   // TODO: return a pointer to the unique Room object representing
   //       the named chat room, creating a new one if necessary
+  Guard g(m_lock);
+
+  //check if room exists, and if so return the room
+  auto it = m_rooms.find(room_name);
+  if (it != m_rooms.end()) {
+    return it->second;
+  }
+
+  //otherwise create a new room with that name and add it to the map of rooms
+  Room *new_room = new Room(room_name);
+  m_rooms[room_name] = new_room;
+  return new_room;
 }
