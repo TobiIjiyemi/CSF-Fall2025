@@ -64,7 +64,7 @@ void communicate_with_receiver(Connection &conn, Server &server, const std::stri
 
   // Now loop 
   while (true) {
-    //HELP
+    //HELP TOBI PLEASE HELP IDK WHAT TO DO
     Message new_msg; 
     user->mqueue.dequeue();
     
@@ -108,8 +108,6 @@ void communicate_with_sender(Connection &conn, Server &server, const std::string
     }
   }
 }
-
-
 
 
 void *worker(void *arg) {
