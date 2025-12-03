@@ -41,6 +41,46 @@ struct ClientInfo {
 
 namespace {
 
+void communicate_with_receiver(Connection &conn, Server &server, const std::string username) {
+  Message join_msg; 
+  if (!conn.receive(join_msg)) {
+    return;
+  } 
+
+  if (join_msg.tag != TAG_JOIN) {
+    conn.send(Message(TAG_ERR, "No join message was received\n"));
+    return;
+  }
+
+  std::string room_to_join = join_msg.data; 
+  
+  // Find or create that room
+  Room *room = server.find_or_create_room(room_to_join);
+  // Create a user for this receiver
+  User *user = new User(username);
+  // Add this user to the room
+  room->add_member(user);
+  conn.send(Message(TAG_OK, "Receiver joined room successfully\n"));
+
+  // Now loop 
+  while (true) {
+    //HELP
+    Message new_msg; 
+    user->mqueue.dequeue();
+    
+    // Receiver left
+    if (!conn.send(new_msg)) { 
+      break;
+    }
+  }
+  user->mqueue.~MessageQueue();
+  room->remove_member(user);
+  delete user; 
+} 
+
+
+
+
 void *worker(void *arg) {
   pthread_detach(pthread_self());
   //no need to worry about deletion with unique_ptr
