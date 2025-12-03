@@ -80,6 +80,11 @@ Server::Server(int port)
 }
 
 Server::~Server() {
+  // Delete room objects
+  for (auto &room : m_rooms) {
+    delete room.second;
+  }
+  m_rooms.clear();
   pthread_mutex_destroy(&m_lock);
 }
 
