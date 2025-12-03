@@ -80,13 +80,11 @@ void communicate_with_receiver(Connection &conn, Server &server, const std::stri
 
 void communicate_with_sender(Connection &conn, Server &server, const std::string username) {
   Message new_msg; 
-  User *user = new User(username);
   Room *current_room = nullptr;
 
   while (conn.receive(new_msg)) {
     if (new_msg.tag == TAG_JOIN) {
       current_room = server.find_or_create_room(new_msg.data);
-      current_room->add_member(user);
       conn.send(Message(TAG_OK, "Joined room successfully\n"));
     } else if (new_msg.tag == TAG_SENDALL) {
       if (current_room == nullptr) {
@@ -99,7 +97,6 @@ void communicate_with_sender(Connection &conn, Server &server, const std::string
       if (current_room == nullptr) {
         conn.send(Message(TAG_ERR, "Can't leave a room you are not in\n"));
       } else {
-        current_room->remove_member(user);
         conn.send(Message(TAG_OK, "Room was left\n"));
         current_room = nullptr;
       }
@@ -110,9 +107,6 @@ void communicate_with_sender(Connection &conn, Server &server, const std::string
       conn.send(Message(TAG_ERR, "Invalid command\n"));
     }
   }
-  if (current_room != nullptr) {
-    current_room->remove_member(user);
-  } delete user;
 }
 
 
