@@ -52,10 +52,10 @@ void communicate_with_receiver(Connection &conn, Server &server, const std::stri
     return;
   }
 
-  std::string room_to_join = join_msg.data; 
-  
+  std::string room_to_join = join_msg.data;
   // Find or create that room
   Room *room = server.find_or_create_room(room_to_join);
+
   // Create a user for this receiver
   User *user = new User(username);
   // Add this user to the room
@@ -65,14 +65,26 @@ void communicate_with_receiver(Connection &conn, Server &server, const std::stri
   // Now loop 
   while (true) {
     //HELP TOBI PLEASE HELP IDK WHAT TO DO
-    Message new_msg; 
-    user->mqueue.dequeue();
+    Message *new_msg = user->mqueue.dequeue();
+
+    if (new_msg) {
+      std::string payload = room_to_join + ":" + username + ":" + new_msg->data;
+      bool pass = conn.send(*new_msg);
+      delete new_msg;
+
+      if (!pass) {
+        break;
+      }
+    } else {
+      if (!conn.is_open()) break;
+    }
     
     // Receiver left
-    if (!conn.send(new_msg)) { 
+    if (!conn.send(*new_msg)) { 
       break;
     }
   }
+
   user->mqueue.~MessageQueue();
   room->remove_member(user);
   delete user; 
@@ -115,7 +127,6 @@ void *worker(void *arg) {
   //no need to worry about deletion with unique_ptr
   std::unique_ptr<ClientInfo> info(static_cast<ClientInfo *>(arg));
   
-
   Message login_msg;
   //read login message
   if (!info->conn->receive(login_msg)) {
@@ -135,7 +146,6 @@ void *worker(void *arg) {
   }
   return nullptr;
 }
-
 }
 
 ////////////////////////////////////////////////////////////////////////
