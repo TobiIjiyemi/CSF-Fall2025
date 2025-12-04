@@ -91,7 +91,7 @@ int main(int argc, char **argv) {
       std::string data = server_msg.data;
       size_t room_sep_colon = data.find(':');
       if (room_sep_colon == std::string::npos) {
-        std::cerr << "Missign room from server message\n";
+        std::cerr << "Missing room from server message\n";
         continue;
       }
 

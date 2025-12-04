@@ -48,7 +48,7 @@ void communicate_with_receiver(Connection &conn, Server &server, const std::stri
   } 
 
   if (join_msg.tag != TAG_JOIN) {
-    conn.send(Message(TAG_ERR, "No join message was received\n"));
+    conn.send(Message(TAG_ERR, "No join message was received"));
     return;
   }
 
@@ -60,32 +60,27 @@ void communicate_with_receiver(Connection &conn, Server &server, const std::stri
   User *user = new User(username);
   // Add this user to the room
   room->add_member(user);
-  conn.send(Message(TAG_OK, "Receiver joined room successfully\n"));
-
-  // Now loop 
-  while (true) {
-    //HELP TOBI PLEASE HELP IDK WHAT TO DO
-    Message *new_msg = user->mqueue.dequeue();
-
-    if (new_msg) {
-      std::string payload = room_to_join + ":" + username + ":" + new_msg->data;
-      bool pass = conn.send(*new_msg);
-      delete new_msg;
-
-      if (!pass) {
-        break;
-      }
-    } else {
-      if (!conn.is_open()) break;
-    }
-    
-    // Receiver left
-    if (!conn.send(*new_msg)) { 
-      break;
-    }
+  if (!conn.send(Message(TAG_OK, "Receiver joined room successfully"))) {
+    room->remove_member(user);
+    delete user;
+    return;
   }
 
-  user->mqueue.~MessageQueue();
+  // Now loop 
+  while (conn.is_open()) {
+    //HELP TOBI PLEASE HELP IDK WHAT TO DO
+    Message *incoming_msg = user->mqueue.dequeue();
+
+    if (incoming_msg == nullptr) continue;
+
+    std::string payload = room_to_join + ":" + username + ":" + incoming_msg->data;
+
+    Message delivery(TAG_DELIVERY, payload);
+
+    bool pass = conn.send(delivery);
+    delete incoming_msg;
+    if (!pass) break;
+  }
   room->remove_member(user);
   delete user; 
 } 
@@ -97,26 +92,26 @@ void communicate_with_sender(Connection &conn, Server &server, const std::string
   while (conn.receive(new_msg)) {
     if (new_msg.tag == TAG_JOIN) {
       current_room = server.find_or_create_room(new_msg.data);
-      conn.send(Message(TAG_OK, "Joined room successfully\n"));
+      conn.send(Message(TAG_OK, "Sender joined room successfully"));
     } else if (new_msg.tag == TAG_SENDALL) {
       if (current_room == nullptr) {
-        conn.send(Message(TAG_ERR, "Not currently in a room\n"));
+        conn.send(Message(TAG_ERR, "Not currently in a room"));
       } else {
         current_room->broadcast_message(username, new_msg.data);
-        conn.send(Message(TAG_OK, "Message sent successfully\n"));
+        conn.send(Message(TAG_OK, "Message sent successfully"));
       }
     } else if (new_msg.tag == TAG_LEAVE) {
       if (current_room == nullptr) {
-        conn.send(Message(TAG_ERR, "Can't leave a room you are not in\n"));
+        conn.send(Message(TAG_ERR, "You can't leave a room you are not in"));
       } else {
-        conn.send(Message(TAG_OK, "Room was left\n"));
+        conn.send(Message(TAG_OK, "Room was left"));
         current_room = nullptr;
       }
     } else if (new_msg.tag == TAG_QUIT) {
-      conn.send(Message(TAG_OK, "Quit\n"));
+      conn.send(Message(TAG_OK, "Quit!"));
       break;
     } else {
-      conn.send(Message(TAG_ERR, "Invalid command\n"));
+      conn.send(Message(TAG_ERR, "Invalid command"));
     }
   }
 }
@@ -138,9 +133,11 @@ void *worker(void *arg) {
   if (login_msg.tag == TAG_SLOGIN) {
     info->conn->send(Message(TAG_OK, "Logged in as sender"));
     //implement communication with sender function
+    communicate_with_sender(*info->conn, *info->server, login_msg.data);
   } else if (login_msg.tag == TAG_RLOGIN) {
     info->conn->send(Message(TAG_OK, "Logged in as receiver"));
     //implementi communication wtih receiver function
+    communicate_with_receiver(*info->conn, *info->server,login_msg.data);
   } else {
     info->conn->send(Message(TAG_ERR, "Invalid login"));
   }
