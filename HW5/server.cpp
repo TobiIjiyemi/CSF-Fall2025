@@ -67,15 +67,13 @@ void communicate_with_receiver(Connection &conn, Server &server, const std::stri
   }
 
   // Now loop 
-  while (conn.is_open()) {
+  while (true) {
     //HELP TOBI PLEASE HELP IDK WHAT TO DO
     Message *incoming_msg = user->mqueue.dequeue();
 
-    if (incoming_msg == nullptr) continue;
+    if (!incoming_msg) continue;
 
-    std::string payload = room_to_join + ":" + username + ":" + incoming_msg->data;
-
-    Message delivery(TAG_DELIVERY, payload);
+    Message delivery(TAG_DELIVERY, incoming_msg->data);
 
     bool pass = conn.send(delivery);
     delete incoming_msg;
