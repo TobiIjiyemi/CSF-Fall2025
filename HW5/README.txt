@@ -25,7 +25,11 @@ data is still valid even after the creating thread moves on to other tasks.
 In server.cpp, specifically in the find_or_create_room function guard locks the mutex when the function is called
 in the case that multiple clients tries to join (or create) the same room simultaneously the mutex locks to prevent duplicate memory allocations or
 <<<<<<< HEAD
+<<<<<<< HEAD
 m_rooms map corruption.
+=======
+m_rooms map corruption.
+>>>>>>> 1c4498d (sync report)
 =======
 m_rooms map corruption.
 >>>>>>> 1c4498d (sync report)
