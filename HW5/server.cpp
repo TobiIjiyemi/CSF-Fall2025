@@ -60,7 +60,7 @@ void communicate_with_receiver(Connection &conn, Server &server, const std::stri
   User *user = new User(username);
   // Add this user to the room
   room->add_member(user);
-  if (!conn.send(Message(TAG_OK, "Receiver joined room successfully"))) {
+  if (!conn.send(Message(TAG_OK, username + " joined room successfully"))) { 
     room->remove_member(user);
     delete user;
     return;
@@ -90,7 +90,7 @@ void communicate_with_sender(Connection &conn, Server &server, const std::string
   while (conn.receive(new_msg)) {
     if (new_msg.tag == TAG_JOIN) {
       current_room = server.find_or_create_room(new_msg.data);
-      conn.send(Message(TAG_OK, "Sender joined room successfully"));
+      conn.send(Message(TAG_OK, username + " joined room successfully"));
     } else if (new_msg.tag == TAG_SENDALL) {
       if (current_room == nullptr) {
         conn.send(Message(TAG_ERR, "Not currently in a room"));
